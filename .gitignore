@@ -156,3 +156,6 @@ slurm_out/*
 *.xml
 *.yml
 *.yaml
+
+# wandb
+wandb/
