@@ -163,4 +163,9 @@ wandb/
 *.zip
 
 *.npy
-data/messidor2/
+
+*.pkl
+
+*JPG
+
+*.h5

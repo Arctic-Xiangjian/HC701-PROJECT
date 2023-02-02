@@ -11,10 +11,10 @@ class APTOS(Dataset):
     def __init__(self, root_dir, transform=None, train=True, resize_shape=(1024, 1024)):
         self.root_dir = root_dir
         self.train = train
-        self.train_image_path = os.path.join(self.root_dir, 'data/train_images')
-        self.test_image_path = os.path.join(self.root_dir, 'data/test_images')
-        self.train_csv_path = os.path.join(self.root_dir, 'data/train.csv')
-        self.test_csv_path = os.path.join(self.root_dir, 'data/test.csv')
+        self.train_image_path = os.path.join(self.root_dir, 'data/aptos/train_images')
+        self.test_image_path = os.path.join(self.root_dir, 'data/aptos/test_images')
+        self.train_csv_path = os.path.join(self.root_dir, 'data/aptos/train.csv')
+        self.test_csv_path = os.path.join(self.root_dir, 'data/aptos/test.csv')
         self.resize_shape = resize_shape
 
         # Use transforms.Resize and transforms.ToTensor to resize and convert image to tensor
