@@ -161,3 +161,6 @@ slurm_out/*
 wandb/
 
 *.zip
+
+*.npy
+data/messidor2/
