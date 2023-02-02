@@ -7,17 +7,16 @@ from matplotlib import pyplot as plt
 import cv2
 from tqdm import tqdm
 
-DATA_PATH = '/l/users/xiangjian.hou/hc701-fed_data/messidor2/'
-SAVE_PATH = '/l/users/xiangjian.hou/preprocessed/messidor2/'
+DATA_PATH_META = '/l/users/xiangjian.hou/hc701-fed_data/messidor/'
+SAVE_PATH_META = '/l/users/xiangjian.hou/preprocessed/messidor/'
 
-
-class pre_process_messidor2(object):
-    def __init__(self, data_path=DATA_PATH):
+class pre_process_messidor(object):
+    def __init__(self, data_path):
         self.data_path = data_path
         self.train_path = os.path.join(self.data_path, 'train')
         self.test_path = os.path.join(self.data_path, 'test')
-    
-    def process_train(self, pre_processed_path=SAVE_PATH):
+        
+    def process_train(self, pre_processed_path):
         save_path = os.path.join(pre_processed_path, 'train')
         for i in tqdm(os.listdir(self.train_path)):
             pre_processed_data = {}
@@ -37,8 +36,8 @@ class pre_process_messidor2(object):
             pre_processed_data['image'] = resized
             pre_processed_data['label'] = origin_data['label']
             np.save(os.path.join(save_path, i), pre_processed_data)
-    
-    def process_test(self, pre_processed_path=SAVE_PATH):
+
+    def process_test(self, pre_processed_path):
         save_path = os.path.join(pre_processed_path, 'test')
         for i in tqdm(os.listdir(self.test_path)):
             pre_processed_data = {}
@@ -59,6 +58,12 @@ class pre_process_messidor2(object):
             pre_processed_data['label'] = origin_data['label']
             np.save(os.path.join(save_path, i), pre_processed_data)
 
-if __name__ == '__main__':
-    pre_process_messidor2().process_train()
-    pre_process_messidor2().process_test()
+
+
+for i in os.listdir(DATA_PATH_META):
+    DATA_PATH = os.path.join(DATA_PATH_META, i)
+    SAVE_PATH = os.path.join(SAVE_PATH_META, i)
+
+    if __name__ == '__main__':
+        pre_process_messidor(data_path=DATA_PATH).process_train(SAVE_PATH)
+        pre_process_messidor(data_path=DATA_PATH).process_test(SAVE_PATH)
