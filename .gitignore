@@ -159,3 +159,5 @@ slurm_out/*
 
 # wandb
 wandb/
+
+*.zip
