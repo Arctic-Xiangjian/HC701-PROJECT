@@ -167,6 +167,6 @@ wandb/
 *.pkl
 
 *JPG
-
+*.tar
 *.h5
 hc701-fed_data/messidor2/data.tar
