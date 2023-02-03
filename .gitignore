@@ -170,3 +170,6 @@ wandb/
 *.tar
 *.h5
 hc701-fed_data/messidor2/data.tar
+
+*.out
+slurm_mogai_prue

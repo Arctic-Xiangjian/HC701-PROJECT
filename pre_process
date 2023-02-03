@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=pre_process
-#SBATCH --output=output.%A_%a_messidor2.txt
+#SBATCH --job-name=Pre_process
+#SBATCH --output=output.%A_%a_eyePacs.out
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem=64G
-#SBATCH --cpus-per-task=16 
-#SBATCH -p cpu            
-#SBATCH --time=12:00:00          
-#SBATCH --qos=cpu-8
-
+#SBATCH --mem=128G
+#SBATCH --cpus-per-task=64
+#SBATCH --gres=gpu:1         
+#SBATCH -p gpu                 
+#SBATCH --time=12:00:00           
+#SBATCH --qos=gpu-8            
 
 hostname
-python
+python /home/xiangjian.hou/HC701-PROJECT/preprocess/pre_process_Eyepacs.py
