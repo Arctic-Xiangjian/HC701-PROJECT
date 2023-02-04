@@ -15,6 +15,7 @@ data_dir_options = {
 class Eye_APTOS(Dataset):
     def __init__(self, data_dir, transform=None, train=True):
         self.data_dir = data_dir
+        self.transform = transform
         self.transform = transforms.ToTensor() if self.transform is None else self.transform
         self.train = train
 

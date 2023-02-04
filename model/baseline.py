@@ -29,7 +29,7 @@ class Baseline(nn.Module):
             self,
             backbone,
             num_classes,
-            pretrained=False,
+            pretrained=True,
             pretrained_path=None,
     ):
         super().__init__()

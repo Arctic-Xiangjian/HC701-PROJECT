@@ -18,14 +18,13 @@ class MESSIDOR(Dataset):
     def __init__(self, data_dir, transform=None, train=True):
         self.data_dir = data_dir
         self.transform = transform
+        self.transform = transforms.ToTensor() if self.transform is None else self.transform
         self.train = train
 
         if self.train:
             self.data_path = os.path.join(self.data_dir, 'train')
         else:
             self.data_path = os.path.join(self.data_dir, 'test')
-
-        self.transform = transforms.ToTensor() if self.transform is None else self.transform
 
         self.data = []
         self.labels = []
