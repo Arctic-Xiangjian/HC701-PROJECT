@@ -175,3 +175,5 @@ hc701-fed_data/messidor2/data.tar
 slurm_mogai_prue
 launch_jupyter.sh
 .hostname
+
+output_jupyter.txt
