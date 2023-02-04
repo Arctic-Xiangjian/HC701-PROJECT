@@ -14,7 +14,7 @@ torch.manual_seed(42)
 ## Load data
 The data you can find in my /l/users/xiangjian.hou/
 
-And demo in `HC701-PROJECT/notebook/Load_Data_Demo.ipynb`
+And demo in `HC701-PROJECT/notebook/Load_Data_and_train_Demo.ipynb`
 
 
 ## Test data
