@@ -11,6 +11,12 @@ os.environ['PYTHONHASHSEED'] = str(42)
 torch.manual_seed(42)
 ```
 
+## Load data
+The data you can find in my /l/users/xiangjian.hou/
+
+And demo in `HC701-PROJECT/notebook/Load_Data_Demo.ipynb`
+
+
 ## Test data
 
 The messidor and messidor2 do not give offical test set. So We can split 0.5/0.25/0.25 as train/val/test split.
