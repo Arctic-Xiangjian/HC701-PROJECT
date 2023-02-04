@@ -177,3 +177,5 @@ launch_jupyter.sh
 .hostname
 
 output_jupyter.txt
+
+/checkpoint
