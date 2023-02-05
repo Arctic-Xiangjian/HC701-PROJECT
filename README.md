@@ -21,19 +21,31 @@ The data you can find in my /l/users/xiangjian.hou/
 And demo in `HC701-PROJECT/notebook/Load_Data_and_train_Demo.ipynb`
 
 ## ideal workspace dir should be
-- [Your workfolder]
-    - `HC701-PROJECT`
-    - `preprocessed`
-        - aptos
-            - train
-            - test
-        - eyepacs
-            - train
-            - test
-        - messidor
-            - ...
-        - messdor2
-            - ...
+[Your workfolder]
+|  
+|-- HC701-PROJECT
+|  
+|-- preprocessed
+|   |
+|   |-- aptos
+|   |   |
+|   |   |-- train
+|   |   |
+|   |   |-- test
+|   |
+|   |-- eyepacs
+|   |   |
+|   |   |-- train
+|   |   |
+|   |   |-- test
+|   |
+|   |-- messidor
+|   |   |
+|   |   |-- ...
+|   |
+|   |-- messdor2
+|   |   |
+|   |   |-- ...
 
 ## Test data
 
