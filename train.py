@@ -97,7 +97,7 @@ def main(backbone,
             best_acc = 0
             if train_acc > best_acc:
                 best_acc = train_acc
-                if not os.path.exists(os.path.join(checkpoint_path, backbone)):
+                if not os.path.exists(os.path.join(checkpoint_path, backbone+'_'+str(seed))):
                     os.mkdir(os.path.join(checkpoint_path, backbone+'_'+str(seed)))
                 torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
             if epoch == epochs - 1:
