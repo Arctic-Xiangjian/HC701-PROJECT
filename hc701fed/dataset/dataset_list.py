@@ -1,5 +1,5 @@
-from EyePACS_and_APTOS import Eye_APTOS
-from messidor import MESSIDOR
+from hc701fed.dataset.EyePACS_and_APTOS import Eye_APTOS
+from hc701fed.dataset.messidor import MESSIDOR
 
 from torch.utils.data import ConcatDataset
 

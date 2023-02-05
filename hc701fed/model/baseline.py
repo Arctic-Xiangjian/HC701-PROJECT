@@ -21,6 +21,10 @@ BACKBONES = {
     'vit_small_patch16_224',
     'vit_base_patch16_224',
     'vit_large_patch16_224',
+    'vgg11',
+    'vgg13',
+    'vgg16',
+    'vgg19',
 }
 
 
@@ -28,7 +32,7 @@ class Baseline(nn.Module):
     def __init__(
             self,
             backbone,
-            num_classes,
+            num_classes = 5,
             pretrained=True,
             pretrained_path=None,
     ):
