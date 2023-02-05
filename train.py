@@ -97,7 +97,7 @@ def main(backbone,
         acc, f1 = test(model, device, val_dataset)
         # wandb log Step: epoch
         if use_wandb:
-            wandb.log({"val_acc": acc, "val_f1": f1}, step=epoch)
+            wandb.log({"val_acc": acc, "val_f1": f1})
         # save model every time after validation get better f1_score
         if f1 > best_f1:
             best_f1 = f1
