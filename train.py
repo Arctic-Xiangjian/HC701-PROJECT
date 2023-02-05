@@ -28,7 +28,7 @@ LOSS = torch.nn.CrossEntropyLoss()
 def main(backbone,
          lr, batch_size, epochs, device, optimizer,
          dataset,seed, use_wandb, 
-         wandb_project, wandb_entity, wandb_run_name, wandb_tags, wandb_notes,
+         wandb_project, wandb_entity,
          save_model, checkpoint_path,
          num_classes=5
          ):
@@ -65,7 +65,7 @@ def main(backbone,
 
 
     if use_wandb:
-        run = wandb.init(project=wandb_project, entity=wandb_entity, name=wandb_run_name+'_'+dataset+'_'+{datetime.now().strftime('%Y%m%d_%H%M%S')}, tags=wandb_tags, notes=wandb_notes,reinit=True)
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=backbone+'_'+dataset+'_'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",mode="dryrun",reinit=True)
 
     # optimizer str to class
     optimizer = eval(optimizer)
@@ -117,12 +117,9 @@ if __name__=="__main__":
     parser.add_argument("--dataset", type=str, default="messidor")
     parser.add_argument("--seed", type=int, default=42)
     # wandb true or false
-    parser.add_argument("--use_wandb", type=bool, default=False)
+    parser.add_argument("--use_wandb", type=bool, default=True)
     parser.add_argument("--wandb_project", type=str, default="HC701-PROJECT")
-    parser.add_argument("--wandb_entity", type=str, default="hc701")
-    parser.add_argument("--wandb_run_name", type=str, default="baseline")
-    parser.add_argument("--wandb_tags", type=str, default="baseline")
-    parser.add_argument("--wandb_notes", type=str, default="baseline")
+    parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     # save model    
     parser.add_argument("--save_model", type=bool, default=False)
     parser.add_argument("--checkpoint_path", type=str, default='none')
