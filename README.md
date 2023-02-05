@@ -37,18 +37,18 @@ And demo in `HC701-PROJECT/notebook/Load_Data_and_train_Demo.ipynb`
         
 Or
 [Your WORKSPACE FOLDER]
-    ├── HC701-PROJECT
-    │   ├── hc701fed
-    │   ├── result
-    │   ├── .gitignore
-    │   ├── README.md
-    │   ├── test.py
-    │   ├── train.py
-    │   ├── preprocessed
-    │       ├── APTOS
-    │       ├── EyePACS
-    │       ├── messidor
-    │       └── messidor2
+├── HC701-PROJECT
+│   ├── hc701fed
+│   ├── result
+│   ├── .gitignore
+│   ├── README.md
+│   ├── test.py
+│   ├── train.py
+└── ├── preprocessed
+        ├── APTOS
+        ├── EyePACS
+        ├── messidor
+        └── messidor2
 
 ## Test data
 
