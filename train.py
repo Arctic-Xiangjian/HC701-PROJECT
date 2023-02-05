@@ -59,6 +59,10 @@ def main(backbone,
     # load model
     model = Baseline(backbone=backbone, num_classes=num_classes)
     model.to(device)
+    
+    # print something to prove so far so good
+    print(f'You are using {backbone} backbone, lr is {lr}, batch_size is {batch_size}, epochs is {epochs}, device is {device}, optimizer is {optimizer}, dataset is {dataset}, seed is {seed}, checkpoint_path is {checkpoint_path}, num_classes is {num_classes}')
+
 
     if use_wandb:
         run = wandb.init(project=wandb_project, entity=wandb_entity, name=wandb_run_name+'_'+dataset+'_'+{datetime.now().strftime('%Y%m%d_%H%M%S')}, tags=wandb_tags, notes=wandb_notes,reinit=True)
