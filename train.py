@@ -94,9 +94,9 @@ def main(backbone,
             if use_wandb:
                 wandb.log({"train_loss": loss})
         # validation
-        acc, f1, auc = test(model, device, val_dataset)
+        acc, f1 = test(model, device, val_dataset)
         if use_wandb:
-            wandb.log({"val_acc": acc, "val_f1": f1, "val_auc": auc})
+            wandb.log({"val_acc": acc, "val_f1": f1})
         # save model every time after validation get better f1_score
         if f1 > best_f1:
             best_f1 = f1

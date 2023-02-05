@@ -44,5 +44,4 @@ def test(test_model, device, val_dataset):
         y_pred = np.argmax(y_pred, axis=1)
         acc = accuracy_score(y_true, y_pred)
         f1 = f1_score(y_true, y_pred,average='macro')
-        auc = roc_auc_score(y_true, y_pred, average='macro', multi_class='ovr')
-    return acc, f1, auc
+    return acc, f1
