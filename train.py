@@ -80,7 +80,7 @@ def main(backbone,
         train_acc = 0
         for i, (x, y) in enumerate(tqdm(train_dataset)):
             x = x.to(device,torch.float32)
-            y = y.to(device)
+            y = y.to(device,torch.long)
             optimizer.zero_grad()
             pred = model(x)
             loss = LOSS(pred, y)
