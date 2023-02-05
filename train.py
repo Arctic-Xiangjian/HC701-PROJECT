@@ -12,10 +12,13 @@ import random
 import torch
 from torch.utils.data import Dataset, DataLoader
 
+from test import test
 
 from hc701fed.dataset.dataset_list import (
     Centerlized_train,
-    MESSIDOR_Centerlized_train
+    Centerlized_val,
+    MESSIDOR_Centerlized_train,
+    MESSIDOR_Centerlized_val
 )
 
 from hc701fed.model.baseline import (
@@ -50,8 +53,10 @@ def main(backbone,
     # load dataset
     if dataset == "centerlized":
         train_dataset = DataLoader(Centerlized_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(Centerlized_val, batch_size=batch_size, shuffle=False)
     elif dataset == "messidor":
         train_dataset = DataLoader(MESSIDOR_Centerlized_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(MESSIDOR_Centerlized_val, batch_size=batch_size, shuffle=False)
         num_classes = 4
     else:
         raise NotImplementedError
@@ -73,12 +78,11 @@ def main(backbone,
 
     # train
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
-    best_acc = 0
+    best_f1 = 0
+    count_no_improve = 0
     for epoch in range(epochs):
         model.train()
         model.to(device)
-        train_loss = 0
-        train_acc = 0
         for i, (x, y) in enumerate(tqdm(train_dataset)):
             x = x.to(device,torch.float32)
             y = y.to(device,torch.long)
@@ -87,21 +91,27 @@ def main(backbone,
             loss = LOSS(pred, y)
             loss.backward()
             optimizer.step()
-            train_loss += loss.item()
-            train_acc += (pred.argmax(dim=1) == y).sum().item()
-        train_loss /= len(train_dataset)
-        train_acc /= len(train_dataset.dataset)
+            if use_wandb:
+                wandb.log({"train_loss": loss})
+        # validation
+        acc, f1, auc = test(model, val_dataset, device)
         if use_wandb:
-            wandb.log({"train_loss": train_loss, "train_acc": train_acc})
-        # save model when train acc is the best and last epoch
-        if save_model:
-            if train_acc > best_acc:
-                best_acc = train_acc
+            wandb.log({"val_acc": acc, "val_f1": f1, "val_auc": auc})
+        # save model every time after validation get better f1_score
+        if f1 > best_f1:
+            best_f1 = f1
+            if save_model:
                 if not os.path.exists(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))):
-                    os.mkdir(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed)))
-                torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
-            if epoch == epochs - 1:
-                torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_last.pth"))
+                        os.mkdir(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed)))
+                    torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
+                if epoch == epochs - 1:
+                    torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_last.pth"))
+        # if the f1_score is not getting better for 5 epochs, stop training
+        if f1 < best_f1:
+            count_no_improve += 1
+            if count_no_improve >= 5:
+                break
+
     if use_wandb:
         run.finish()
 
