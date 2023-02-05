@@ -7,6 +7,7 @@ import wandb
 from datetime import datetime
 from tqdm import tqdm
 import argparse
+import random
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -25,15 +26,16 @@ from hc701fed.model.baseline import (
 
 LOSS = torch.nn.CrossEntropyLoss()
 
-def main(backbone, lr, batch_size, epochs, device, dataset, model_name, seed, wandb_project, wandb_entity, wandb_run_name, wandb_tags, wandb_notes,num_classes=5):
-    # wandb init
-    wandb.init(project=wandb_project, entity=wandb_entity, name=wandb_run_name+, tags=wandb_tags, notes=wandb_notes)
-    wandb.config.update(args)
+def main(backbone, lr, batch_size, epochs, device, dataset, model_name, seed,wandb, wandb_project, wandb_entity, wandb_run_name, wandb_tags, wandb_notes,num_classes=5):
+    
 
     # set seed
-    np.random.seed(seed)
-    torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    torch.manual_seed(seed)
 
     # load dataset
     if dataset == "centerlized":
@@ -48,7 +50,8 @@ def main(backbone, lr, batch_size, epochs, device, dataset, model_name, seed, wa
     model = Baseline(backbone=backbone, num_classes=num_classes)
     model.to(device)
 
-    run = wandb.init(project=wandb_project, entity=wandb_entity, name=wandb_run_name+{datetime.now().strftime('%Y%m%d_%H%M%S')}, tags=wandb_tags, notes=wandb_notes,reinit=True)
+    if wandb:
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=wandb_run_name+'_'+dataset+'_'+{datetime.now().strftime('%Y%m%d_%H%M%S')}, tags=wandb_tags, notes=wandb_notes,reinit=True)
 
     # optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -69,8 +72,9 @@ def main(backbone, lr, batch_size, epochs, device, dataset, model_name, seed, wa
             train_loss += loss.item()
             train_acc += (pred.argmax(dim=1) == y).sum().item()
         train_loss /= len(train_dataset)
-        train_acc /= len(train_dataset.dataset) 
-        wandb.log({"train_loss": train_loss, "train_acc": train_acc})
+        train_acc /= len(train_dataset.dataset)
+        if wandb:
+            wandb.log({"train_loss": train_loss, "train_acc": train_acc})
         # save model when train acc is the best and last epoch
         best_acc = 0
         if train_acc > best_acc:
@@ -80,7 +84,10 @@ def main(backbone, lr, batch_size, epochs, device, dataset, model_name, seed, wa
             torch.save(model.state_dict(), os.path.join(model_name, f"{backbone}_{dataset}_{model_name}_{epoch}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pth"))
         if epoch == epochs - 1:
             torch.save(model.state_dict(), os.path.join(model_name, f"{backbone}_{dataset}_{model_name}_last.pth"))
-    run.finish()
+    if wandb:
+        run.finish()
+
+
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--backbone", type=str, default="densenet121")
@@ -91,6 +98,8 @@ if __name__=="__main__":
     parser.add_argument("--dataset", type=str, default="centerlized")
     parser.add_argument("--model_name", type=str, default="baseline")
     parser.add_argument("--seed", type=int, default=42)
+    # wandb true or false
+    parser.add_argument("--wandb", type=bool, default=False)
     parser.add_argument("--wandb_project", type=str, default="HC701-PROJECT")
     parser.add_argument("--wandb_entity", type=str, default="hc701")
     parser.add_argument("--wandb_run_name", type=str, default="baseline")
