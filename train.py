@@ -98,10 +98,10 @@ def main(backbone,
             if train_acc > best_acc:
                 best_acc = train_acc
                 if not os.path.exists(os.path.join(checkpoint_path, backbone)):
-                    os.mkdir(os.path.join(checkpoint_path, backbone))
-                torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone, f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
+                    os.mkdir(os.path.join(checkpoint_path, backbone+'_'+str(seed)))
+                torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
             if epoch == epochs - 1:
-                torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone, f"{dataset}_{backbone}_last.pth"))
+                torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone+'_'+str(seed), f"{dataset}_{backbone}_last.pth"))
     if use_wandb:
         run.finish()
 
