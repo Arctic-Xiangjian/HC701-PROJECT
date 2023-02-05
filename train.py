@@ -102,8 +102,8 @@ def main(backbone,
             best_f1 = f1
             if save_model:
                 if not os.path.exists(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))):
-                        os.mkdir(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed)))
-                    torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
+                    os.mkdir(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed)))
+                torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
                 if epoch == epochs - 1:
                     torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_last.pth"))
         # if the f1_score is not getting better for 5 epochs, stop training
