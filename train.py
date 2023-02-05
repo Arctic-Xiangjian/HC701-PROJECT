@@ -73,6 +73,7 @@ def main(backbone,
 
     # train
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
+    best_acc = 0
     for epoch in range(epochs):
         model.train()
         model.to(device)
@@ -94,7 +95,6 @@ def main(backbone,
             wandb.log({"train_loss": train_loss, "train_acc": train_acc})
         # save model when train acc is the best and last epoch
         if save_model:
-            best_acc = 0
             if train_acc > best_acc:
                 best_acc = train_acc
                 if not os.path.exists(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))):
