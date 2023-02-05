@@ -27,7 +27,7 @@ class Eye_APTOS(Dataset):
 
         if self.mode == 'train' or self.mode == 'val':
             self.data_path = os.path.join(self.data_dir, 'train')
-            for i in os.listdir(self.data_dir):
+            for i in os.listdir(self.data_path):
                     data = np.load(os.path.join(self.data_path, i), allow_pickle=True).item()
                     # Image to 0-1
                     image_data = data['image'] / data['image'].max()
@@ -35,7 +35,7 @@ class Eye_APTOS(Dataset):
                     self.labels.append(data['label'])
             self.data, self.val_data, self.labels, self.val_labels = train_test_split(self.data, self.labels, test_size=self.train_val_split, random_state=42)
         elif self.mode == 'test':
-            data_dir = os.path.join(self.data_path, 'test')
+            self.data_path = os.path.join(self.data_dir, 'test')
             for i in os.listdir(self.data_path):
                 data = np.load(os.path.join(self.data_path, i), allow_pickle=True).item()
                 # Image to 0-1

@@ -16,9 +16,9 @@ from test import test
 
 from hc701fed.dataset.dataset_list import (
     Centerlized_train,
-    Centerlized_val,
+    Centerlized_Val,
     MESSIDOR_Centerlized_train,
-    MESSIDOR_Centerlized_val
+    MESSIDOR_Centerlized_Val
 )
 
 from hc701fed.model.baseline import (
@@ -53,10 +53,10 @@ def main(backbone,
     # load dataset
     if dataset == "centerlized":
         train_dataset = DataLoader(Centerlized_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(Centerlized_val, batch_size=batch_size, shuffle=False)
+        val_dataset = DataLoader(Centerlized_Val, batch_size=batch_size, shuffle=False)
     elif dataset == "messidor":
         train_dataset = DataLoader(MESSIDOR_Centerlized_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(MESSIDOR_Centerlized_val, batch_size=batch_size, shuffle=False)
+        val_dataset = DataLoader(MESSIDOR_Centerlized_Val, batch_size=batch_size, shuffle=False)
         num_classes = 4
     else:
         raise NotImplementedError
