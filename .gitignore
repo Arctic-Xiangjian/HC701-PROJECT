@@ -178,3 +178,5 @@ launch_jupyter.sh
 output_jupyter.txt
 
 /checkpoint
+pre_process
+hc701fed/pre_process
