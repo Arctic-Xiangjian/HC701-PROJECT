@@ -65,7 +65,7 @@ def main(backbone,
 
 
     if use_wandb:
-        run = wandb.init(project=wandb_project, entity=wandb_entity, name=backbone+'_'+dataset+'_'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=dataset+'_'+backbone+'_'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
 
     # optimizer str to class
     optimizer = eval(optimizer)
