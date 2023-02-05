@@ -11,6 +11,10 @@ os.environ['PYTHONHASHSEED'] = str(42)
 torch.manual_seed(42)
 ```
 
+## Train
+
+`python train.py --backbone densenet121 --batch_size 1 --epochs 500 --dataset messidor --seed 42`
+
 ## Load data
 The data you can find in my /l/users/xiangjian.hou/
 
