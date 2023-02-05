@@ -34,8 +34,8 @@ def test(test_model, device, val_dataset):
     y_pred = []
     with torch.no_grad():
         for data, label in tqdm(val_dataset):
-            data = data.to(device)
-            label = label.to(device)
+            data = data.to(device,torch.float32)
+            label = label.to(device,torch.long)
             output = model(data)
             y_true.append(label.cpu().numpy())
             y_pred.append(output.cpu().numpy())
