@@ -26,10 +26,18 @@ from hc701fed.model.baseline import (
 LOSS = torch.nn.CrossEntropyLoss()
 
 def main(backbone,
-         lr, batch_size, epochs, device, 
+         lr, batch_size, epochs, device, optimizer,
          dataset,seed, use_wandb, 
-         wandb_project,wandb_entity, wandb_run_name, wandb_tags, wandb_notes,
-         num_classes=5):
+         wandb_project, wandb_entity, wandb_run_name, wandb_tags, wandb_notes,
+         save_model, checkpoint_path,
+         num_classes=5
+         ):
+    
+    if save_model:
+        if checkpoint_path == "none":
+            raise ValueError("checkpoint_path is None")
+        if not os.path.exists(checkpoint_path):
+            os.mkdir(checkpoint_path)
     
     # set seed
     torch.cuda.manual_seed(seed)
@@ -55,10 +63,12 @@ def main(backbone,
     if use_wandb:
         run = wandb.init(project=wandb_project, entity=wandb_entity, name=wandb_run_name+'_'+dataset+'_'+{datetime.now().strftime('%Y%m%d_%H%M%S')}, tags=wandb_tags, notes=wandb_notes,reinit=True)
 
-    # optimizer
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    # optimizer str to class
+    optimizer = eval(optimizer)
+    optimizer = optimizer(model.parameters(), lr=lr)
 
     # train
+    model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     for epoch in range(epochs):
         model.train()
         model.to(device)
@@ -79,15 +89,16 @@ def main(backbone,
         if use_wandb:
             wandb.log({"train_loss": train_loss, "train_acc": train_acc})
         # save model when train acc is the best and last epoch
-        # best_acc = 0
-        # if train_acc > best_acc:
-        #     best_acc = train_acc
-        #     if not os.path.exists(model_name):
-        #         os.mkdir(model_name)
-        #     torch.save(model.state_dict(), os.path.join(model_name, f"{backbone}_{dataset}_{model_name}_{epoch}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pth"))
-        # if epoch == epochs - 1:
-        #     torch.save(model.state_dict(), os.path.join(model_name, f"{backbone}_{dataset}_{model_name}_last.pth"))
-    if wandb:
+        if save_model:
+            best_acc = 0
+            if train_acc > best_acc:
+                best_acc = train_acc
+                if not os.path.exists(os.path.join(checkpoint_path, backbone)):
+                    os.mkdir(os.path.join(checkpoint_path, backbone))
+                torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone, f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
+            if epoch == epochs - 1:
+                torch.save(model.state_dict(), os.path.join(checkpoint_path, backbone, f"{dataset}_{backbone}_last.pth"))
+    if use_wandb:
         run.finish()
 
 
@@ -96,8 +107,9 @@ if __name__=="__main__":
     parser.add_argument("--backbone", type=str, default="densenet121")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--optimizer", type=str, default='torch.optim.Adam')
     parser.add_argument("--dataset", type=str, default="messidor")
     parser.add_argument("--seed", type=int, default=42)
     # wandb true or false
@@ -107,5 +119,8 @@ if __name__=="__main__":
     parser.add_argument("--wandb_run_name", type=str, default="baseline")
     parser.add_argument("--wandb_tags", type=str, default="baseline")
     parser.add_argument("--wandb_notes", type=str, default="baseline")
+    # save model    
+    parser.add_argument("--save_model", type=bool, default=False)
+    parser.add_argument("--checkpoint_path", type=str, default='none')
     args = parser.parse_args()
     main(**vars(args))

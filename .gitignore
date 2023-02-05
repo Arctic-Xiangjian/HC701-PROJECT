@@ -148,7 +148,6 @@ slurm_out/*
 *.docx
 
 # data
-*.csv
 *.tsv
 *.xls
 *.xlsx
