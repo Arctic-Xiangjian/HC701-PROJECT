@@ -114,7 +114,7 @@ if __name__=="__main__":
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--optimizer", type=str, default='torch.optim.Adam')
-    parser.add_argument("--dataset", type=str, default="messidor")
+    parser.add_argument("--dataset", type=str, default="centerlized")
     parser.add_argument("--seed", type=int, default=42)
     # wandb true or false
     parser.add_argument("--use_wandb", type=bool, default=False)
