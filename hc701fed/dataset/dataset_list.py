@@ -4,16 +4,16 @@ from hc701fed.dataset.messidor import MESSIDOR
 from torch.utils.data import ConcatDataset
 
 Eye_APTOS_data_dir_options = {
-    'EyePACS': '/home/xiangjianhou/hc701-fed/preprocessed/eyepacs',
-    'APTOS': '/home/xiangjianhou/hc701-fed/preprocessed/aptos',
+    'EyePACS': '/home/xiangjian.hou/hc701-fed/preprocessed/eyepacs',
+    'APTOS': '/home/xiangjian.hou/hc701-fed/preprocessed/aptos',
 }
 
 
 MESSIDOR_data_dir_options = {
-    'messidor2': '/home/xiangjianhou/hc701-fed/preprocessed/messidor2',
-    'messidor_pairs' : '/home/xiangjianhou/hc701-fed/preprocessed/messidor/messidor_pairs',
-    'messidor_Etienne' : '/home/xiangjianhou/hc701-fed/preprocessed/messidor/messidor_Etienne',
-    'messidor_Brest-without_dilation' : '/home/xiangjianhou/hc701-fed/preprocessed/messidor/messidor_Brest-without_dilation'
+    'messidor2': '/home/xiangjian.hou/hc701-fed/preprocessed/messidor2',
+    'messidor_pairs' : '/home/xiangjian.hou/hc701-fed/preprocessed/messidor/messidor_pairs',
+    'messidor_Etienne' : '/home/xiangjian.hou/hc701-fed/preprocessed/messidor/messidor_Etienne',
+    'messidor_Brest-without_dilation' : '/home/xiangjian.hou/hc701-fed/preprocessed/messidor/messidor_Brest-without_dilation'
 }
 
 
