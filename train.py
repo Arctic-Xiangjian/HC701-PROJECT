@@ -84,6 +84,7 @@ def main(backbone,
     for epoch in range(epochs):
         model.train()
         model.to(device)
+        epoch_loss = 0
         for i, (x, y) in enumerate(tqdm(train_dataset)):
             x = x.to(device,torch.float32)
             y = y.to(device,torch.long)
@@ -92,14 +93,15 @@ def main(backbone,
             loss = LOSS(pred, y)
             loss.backward()
             optimizer.step()
-            if use_wandb:
-                wandb.log({"train_loss": loss})
+            epoch_loss += loss.item()
+        # wandb log Step: epoch
+        epoch_loss = epoch_loss / len(train_dataset) * batch_size
         # validation
         acc, f1 = test(model, device, val_dataset)
         # wandb log Step: epoch
         if use_wandb:
             # Horizontal axis: epoch
-            wandb.log({"val_acc": acc, "val_f1": f1}, step=epoch)
+            wandb.log({"val_acc": acc, "val_f1": f1,"train_loss": epoch_loss})
         # save model every time after validation get better f1_score
         if f1 > best_f1:
             best_f1 = f1
