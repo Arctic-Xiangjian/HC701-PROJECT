@@ -101,6 +101,7 @@ def main(backbone,
         # save model every time after validation get better f1_score
         if f1 > best_f1:
             best_f1 = f1
+            count_no_improve = 0
             if save_model:
                 if not os.path.exists(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))):
                     os.mkdir(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed)))
