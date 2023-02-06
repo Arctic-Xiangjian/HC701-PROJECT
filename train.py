@@ -8,6 +8,7 @@ from datetime import datetime
 from tqdm import tqdm
 import argparse
 import random
+import json
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -116,6 +117,12 @@ def main(backbone,
 
     if use_wandb:
         run.finish()
+
+    train_set_acc , train_set_f1 = test(model, device, train_dataset)
+    # Save the config of the model as a json file and the best f1_score of validation set and the f1_score of train set with last epoch to see if the model is overfitting
+    if save_model:
+        with open(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{model_begin_time}.json"), 'w') as f:
+            json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_f1": best_f1, "train_set_f1": train_set_f1}, f)
 
 
 if __name__=="__main__":
