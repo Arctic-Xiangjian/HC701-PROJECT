@@ -154,7 +154,6 @@ slurm_out/*
 *.json
 *.xml
 *.yml
-*.yaml
 
 # wandb
 wandb/
@@ -181,3 +180,4 @@ output_jupyter.txt
 pre_process
 hc701fed/pre_process
 train_slume
+train_debug.py

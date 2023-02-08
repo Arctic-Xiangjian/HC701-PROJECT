@@ -1,0 +1,9 @@
+process: {}
+train:
+  trans_to_PIL:
+    mode: RGB
+  horizontal_flip:
+    p: 0.5
+  random_rotation:
+    degrees: [-10, 10]
+val: {}
