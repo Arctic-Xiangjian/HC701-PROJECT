@@ -31,7 +31,7 @@ class MESSIDOR(Dataset):
             for i in os.listdir(self.data_path):
                     data = np.load(os.path.join(self.data_path, i), allow_pickle=True).item()
                     # Image to 0-1
-                    image_data = data['image'] / data['image'].max()
+                    image_data = data['image']
                     self.data.append(image_data)
                     self.labels.append(data['label'])
             self.data, self.val_data, self.labels, self.val_labels = train_test_split(self.data, self.labels, test_size=self.train_val_split, random_state=42)
@@ -40,7 +40,7 @@ class MESSIDOR(Dataset):
             for i in os.listdir(self.data_path):
                 data = np.load(os.path.join(self.data_path, i), allow_pickle=True).item()
                 # Image to 0-1
-                image_data = data['image'] / data['image'].max()
+                image_data = data['image']
                 self.data.append(image_data)
         else:
             raise ValueError('mode should be train, val or test')

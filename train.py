@@ -13,9 +13,9 @@ import json
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from test import test
+from VAL import test
 
-from hc701fed.dataset.dataset_list import (
+from hc701fed.dataset.dataset_list_transform import (
     Centerlized_train,
     Centerlized_Val,
     MESSIDOR_Centerlized_train,
@@ -23,8 +23,7 @@ from hc701fed.dataset.dataset_list import (
 )
 
 from hc701fed.model.baseline import (
-    Baseline,
-    BACKBONES
+    Baseline
 )
 
 LOSS = torch.nn.CrossEntropyLoss()
@@ -80,6 +79,7 @@ def main(backbone,
     # train
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     best_f1 = 0
+    best_acc = 0
     count_no_improve = 0
     for epoch in range(epochs):
         model.train()
@@ -105,6 +105,7 @@ def main(backbone,
         # save model every time after validation get better f1_score
         if f1 > best_f1:
             best_f1 = f1
+            best_acc = acc
             count_no_improve = 0
             if save_model:
                 if not os.path.exists(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))):
@@ -115,7 +116,7 @@ def main(backbone,
         # if the f1_score is not getting better for 5 epochs, stop training
         if f1 < best_f1:
             count_no_improve += 1
-            if count_no_improve >= 5:
+            if count_no_improve >= 7:
                 break
 
     if use_wandb:
@@ -126,7 +127,7 @@ def main(backbone,
     if save_model:
         optimizer = str(optimizer).split(" ")[0]
         with open(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{model_begin_time}.json"), 'w') as f:
-            json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc}, f)
+            json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_acc": best_acc, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc}, f)
 
 
 if __name__=="__main__":

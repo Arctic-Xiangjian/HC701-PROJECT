@@ -11,18 +11,8 @@ import random
 import copy
 
 import torch
-from torch.utils.data import Dataset, DataLoader
 
 
-from hc701fed.dataset.dataset_list import (
-    Centerlized_Val,
-    MESSIDOR_Centerlized_Val
-)
-
-from hc701fed.model.baseline import (
-    Baseline,
-    BACKBONES
-)
 
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
 
