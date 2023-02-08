@@ -110,8 +110,13 @@ def main(backbone,
             if save_model:
                 if not os.path.exists(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))):
                     os.mkdir(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed)))
-                torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
-                if epoch == epochs - 1:
+                save_path_meta = os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed))
+                if not os.path.exists(os.path.join(save_path_meta, model_begin_time)):
+                    os.mkdir(os.path.join(save_path_meta, model_begin_time))
+                save_path = os.path.join(save_path_meta, model_begin_time)
+                torch.save(model.state_dict(), os.path.join(save_path, f"{dataset}_{backbone}_{epoch}_{model_begin_time}.pth"))
+                torch.save(model.state_dict(), os.path.join(save_path, f"{dataset}_{backbone}_best.pth"))
+                if epoch == epochs-1:
                     torch.save(model.state_dict(), os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_last.pth"))
         # if the f1_score is not getting better for 5 epochs, stop training
         if f1 < best_f1:
@@ -126,7 +131,7 @@ def main(backbone,
     # Save the config of the model as a json file and the best f1_score of validation set and the f1_score of train set with last epoch to see if the model is overfitting
     if save_model:
         optimizer = str(optimizer).split(" ")[0]
-        with open(os.path.join(checkpoint_path, dataset+'_'+backbone+'_'+str(seed), f"{dataset}_{backbone}_{model_begin_time}.json"), 'w') as f:
+        with open(os.path.join(save_path, f"{dataset}_{backbone}_{model_begin_time}.json"), "w") as f:
             json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_acc": best_acc, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc}, f)
 
 
