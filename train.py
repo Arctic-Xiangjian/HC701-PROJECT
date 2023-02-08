@@ -146,7 +146,7 @@ if __name__=="__main__":
     parser.add_argument("--dataset", type=str, default="centerlized")
     parser.add_argument("--seed", type=int, default=42)
     # wandb true or false
-    parser.add_argument("--use_wandb", type=bool, default=False)
+    parser.add_argument("--use_wandb", action='store_true', help='use wandb or not')
     parser.add_argument("--wandb_project", type=str, default="HC701-PROJECT")
     parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     # save model    
