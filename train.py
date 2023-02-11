@@ -102,6 +102,7 @@ def main(backbone,
     else:
         raise NotImplementedError
 
+    LOSS.to(device)
     # load model
     model = Baseline(backbone=backbone, num_classes=num_classes)
     model.to(device)
@@ -116,7 +117,7 @@ def main(backbone,
     # optimizer str to class
     optimizer = eval(optimizer)
     optimizer = optimizer(model.parameters(), lr=lr)
-
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=0.0001)
     # train
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     best_f1 = 0
@@ -162,9 +163,9 @@ def main(backbone,
         # if the f1_score is not getting better for 5 epochs, stop training
         if f1 < best_f1:
             count_no_improve += 1
-            if count_no_improve >= 7:
+            if count_no_improve >= 20:
                 break
-
+        scheduler.step()
     if use_wandb:
         run.finish()
 
@@ -181,7 +182,7 @@ if __name__=="__main__":
     parser.add_argument("--backbone", type=str, default="resnet50")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--optimizer", type=str, default='torch.optim.AdamW')
     parser.add_argument("--dataset", type=str, default="centerlized", help='centerlized or not', choices=['centerlized', "messidor","aptos" , "eyepacs" , "messidor2", "messidor_pairs","messidor_etienne","messidor_brest"])

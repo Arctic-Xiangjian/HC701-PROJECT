@@ -77,12 +77,4 @@ class Eye_APTOS(Dataset):
             y=labels,
         )
         return torch.FloatTensor(class_weights)
-    
-
-# debug to check the label
-if __name__ == '__main__':
-    data_dir = data_dir_options['EyePACS']
-    dataset = Eye_APTOS(data_dir, mode='train')
-    weights = dataset.calculate_weights()
-    pass
 
