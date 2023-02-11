@@ -15,18 +15,26 @@ from torch.utils.data import Dataset, DataLoader
 
 from VAL import test
 
+from hc701fed.dataset.WeightedConcatDataset import WeightedConcatDataset
 from hc701fed.dataset.dataset_list_transform import (
-    Centerlized_train,
-    Centerlized_Val,
-    MESSIDOR_Centerlized_train,
-    MESSIDOR_Centerlized_Val
+    APTOS_train,
+    EyePACS_train,
+    MESSIDOR_2_train,
+    MESSIDOR_pairs_train,
+    MESSIDOR_Etienne_train,
+    MESSIDOR_Brest_train,
+    APTOS_Val,
+    EyePACS_Val,
+    MESSIDOR_2_Val,
+    MESSIDOR_pairs_Val,
+    MESSIDOR_Etienne_Val,
+    MESSIDOR_Brest_Val,
 )
 
 from hc701fed.model.baseline import (
     Baseline
 )
 
-LOSS = torch.nn.CrossEntropyLoss()
 
 def main(backbone,
          lr, batch_size, epochs, device, optimizer,
@@ -52,12 +60,45 @@ def main(backbone,
 
     # load dataset
     if dataset == "centerlized":
+        Centerlized_train = WeightedConcatDataset([APTOS_train, EyePACS_train, MESSIDOR_2_train, MESSIDOR_pairs_train, MESSIDOR_Etienne_train,MESSIDOR_Brest_train])
+        Centerlized_Val = WeightedConcatDataset([APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
         train_dataset = DataLoader(Centerlized_train, batch_size=batch_size, shuffle=True)
         val_dataset = DataLoader(Centerlized_Val, batch_size=batch_size, shuffle=False)
+        LOSS = torch.nn.CrossEntropyLoss(weight=Centerlized_train.calculate_weights())
     elif dataset == "messidor":
+        MESSIDOR_Centerlized_train = WeightedConcatDataset([MESSIDOR_pairs_train, MESSIDOR_Etienne_train,MESSIDOR_Brest_train])
+        MESSIDOR_Centerlized_Val = WeightedConcatDataset([MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
         train_dataset = DataLoader(MESSIDOR_Centerlized_train, batch_size=batch_size, shuffle=True)
         val_dataset = DataLoader(MESSIDOR_Centerlized_Val, batch_size=batch_size, shuffle=False)
         num_classes = 4
+        LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Centerlized_train.calculate_weights())
+    elif dataset == "aptos":
+        train_dataset = DataLoader(APTOS_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(APTOS_Val, batch_size=batch_size, shuffle=False)
+        LOSS = torch.nn.CrossEntropyLoss(weight=APTOS_train.calculate_weights())
+    elif dataset == "eyepacs":
+        train_dataset = DataLoader(EyePACS_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(EyePACS_Val, batch_size=batch_size, shuffle=False)
+        LOSS = torch.nn.CrossEntropyLoss(weight=EyePACS_train.calculate_weights())
+    elif dataset == "messidor2":
+        train_dataset = DataLoader(MESSIDOR_2_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(MESSIDOR_2_Val, batch_size=batch_size, shuffle=False)
+        LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_2_train.calculate_weights())
+    elif dataset == "messidor_pairs":
+        train_dataset = DataLoader(MESSIDOR_pairs_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(MESSIDOR_pairs_Val, batch_size=batch_size, shuffle=False)
+        num_classes = 4
+        LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_pairs_train.calculate_weights())
+    elif dataset == "messidor_etienne":
+        train_dataset = DataLoader(MESSIDOR_Etienne_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(MESSIDOR_Etienne_Val, batch_size=batch_size, shuffle=False)
+        num_classes = 4
+        LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Etienne_train.calculate_weights())
+    elif dataset == "messidor_brest":
+        train_dataset = DataLoader(MESSIDOR_Brest_train, batch_size=batch_size, shuffle=True)
+        val_dataset = DataLoader(MESSIDOR_Brest_Val, batch_size=batch_size, shuffle=False)
+        num_classes = 4
+        LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Brest_train.calculate_weights())
     else:
         raise NotImplementedError
 
@@ -137,20 +178,20 @@ def main(backbone,
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--backbone", type=str, default="densenet121")
+    parser.add_argument("--backbone", type=str, default="resnet50")
     parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--batch_size", type=int, default=32)
+    parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--device", type=str, default="cuda")
-    parser.add_argument("--optimizer", type=str, default='torch.optim.Adam')
-    parser.add_argument("--dataset", type=str, default="centerlized")
+    parser.add_argument("--optimizer", type=str, default='torch.optim.AdamW')
+    parser.add_argument("--dataset", type=str, default="centerlized", help='centerlized or not', choices=['centerlized', "messidor","aptos" , "eyepacs" , "messidor2", "messidor_pairs","messidor_etienne","messidor_brest"])
     parser.add_argument("--seed", type=int, default=42)
     # wandb true or false
     parser.add_argument("--use_wandb", action='store_true', help='use wandb or not')
     parser.add_argument("--wandb_project", type=str, default="HC701-PROJECT")
     parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     # save model    
-    parser.add_argument("--save_model", type=bool, default=False)
+    parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument("--checkpoint_path", type=str, default='none')
     args = parser.parse_args()
     main(**vars(args))

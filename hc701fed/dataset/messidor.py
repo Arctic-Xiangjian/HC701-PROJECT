@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_class_weight
 
 import torch
 from torch.utils.data import Dataset
@@ -63,5 +64,19 @@ class MESSIDOR(Dataset):
             return self.transform(self.val_data[idx]), self.val_labels[idx]
         else:
             return self.transform(self.data[idx]), self.labels[idx]
+        
+    def calculate_weights(self):
+        if self.mode == 'train':
+            labels = self.labels
+        elif self.mode == 'val':
+            labels = self.val_labels
+        else:
+            raise ValueError('mode should be train or val')
+        class_weights = compute_class_weight(
+            class_weight='balanced',
+            classes=list(set(labels)),
+            y=labels,
+        )
+        return torch.FloatTensor(class_weights)
 
     
