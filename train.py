@@ -107,6 +107,7 @@ def main(backbone,
     model = Baseline(backbone=backbone, num_classes=num_classes)
     model.to(device)
     
+
     # print something to prove so far so good
     print(f'You are using {backbone} backbone, lr is {lr}, batch_size is {batch_size}, epochs is {epochs}, device is {device}, optimizer is {optimizer}, dataset is {dataset}, seed is {seed}, checkpoint_path is {checkpoint_path}, num_classes is {num_classes}')
 
@@ -172,9 +173,13 @@ def main(backbone,
     train_set_acc , train_set_f1 = test(model, device, train_dataset)
     # Save the config of the model as a json file and the best f1_score of validation set and the f1_score of train set with last epoch to see if the model is overfitting
     if save_model:
+        if dataset != "centerlized":
+            Centerlized_Val = Centerlized_Val = WeightedConcatDataset([APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
+        model.load_state_dict(torch.load(os.path.join(save_path, f"{dataset}_{backbone}_best.pth")))
+        centerlized_set_acc , centerlized_set_f1 = test(model, device, Centerlized_Val)
         optimizer = str(optimizer).split(" ")[0]
         with open(os.path.join(save_path, f"{dataset}_{backbone}_{model_begin_time}.json"), "w") as f:
-            json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_acc": best_acc, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc}, f)
+            json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_acc": best_acc, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc, "centerlized_set_f1": centerlized_set_f1, "centerlized_set_acc": centerlized_set_acc}, f)
 
 
 if __name__=="__main__":
@@ -182,7 +187,7 @@ if __name__=="__main__":
     parser.add_argument("--backbone", type=str, default="resnet50")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--batch_size", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--optimizer", type=str, default='torch.optim.AdamW')
     parser.add_argument("--dataset", type=str, default="centerlized", help='centerlized or not', choices=['centerlized', "messidor","aptos" , "eyepacs" , "messidor2", "messidor_pairs","messidor_etienne","messidor_brest"])
