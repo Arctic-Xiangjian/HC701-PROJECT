@@ -173,10 +173,10 @@ def main(backbone,
     train_set_acc , train_set_f1 = test(model, device, train_dataset)
     # Save the config of the model as a json file and the best f1_score of validation set and the f1_score of train set with last epoch to see if the model is overfitting
     if save_model:
-        if dataset != "centerlized":
-            Centerlized_Val = Centerlized_Val = WeightedConcatDataset([APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
+        Centerlized_Val = WeightedConcatDataset([APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
+        fianl_val_dataset = DataLoader(Centerlized_Val, batch_size=256, shuffle=False)
         model.load_state_dict(torch.load(os.path.join(save_path, f"{dataset}_{backbone}_best.pth")))
-        centerlized_set_acc , centerlized_set_f1 = test(model, device, Centerlized_Val)
+        centerlized_set_acc , centerlized_set_f1 = test(model, device, fianl_val_dataset)
         optimizer = str(optimizer).split(" ")[0]
         with open(os.path.join(save_path, f"{dataset}_{backbone}_{model_begin_time}.json"), "w") as f:
             json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_acc": best_acc, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc, "centerlized_set_f1": centerlized_set_f1, "centerlized_set_acc": centerlized_set_acc}, f)
