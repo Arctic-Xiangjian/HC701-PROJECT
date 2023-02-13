@@ -41,6 +41,7 @@ def main(backbone,
          dataset,seed, use_wandb, 
          wandb_project, wandb_entity,
          save_model, checkpoint_path,
+         off_scheduler,off_weighted_loss,
          num_classes=5
          ):
     
@@ -102,6 +103,9 @@ def main(backbone,
     else:
         raise NotImplementedError
 
+    if off_weighted_loss:
+        LOSS = torch.nn.CrossEntropyLoss()
+
     LOSS.to(device)
     # load model
     model = Baseline(backbone=backbone, num_classes=num_classes)
@@ -118,7 +122,8 @@ def main(backbone,
     # optimizer str to class
     optimizer = eval(optimizer)
     optimizer = optimizer(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=0.0001)
+    if not off_scheduler:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0.00002)
     # train
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     best_f1 = 0
@@ -164,9 +169,10 @@ def main(backbone,
         # if the f1_score is not getting better for 5 epochs, stop training
         if f1 < best_f1:
             count_no_improve += 1
-            if count_no_improve >= 20:
+            if count_no_improve >= 40:
                 break
-        scheduler.step()
+        if not off_scheduler:
+            scheduler.step()
     if use_wandb:
         run.finish()
 
@@ -199,5 +205,9 @@ if __name__=="__main__":
     # save model    
     parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument("--checkpoint_path", type=str, default='none')
+    # turn off shelduler or not
+    parser.add_argument("--off_scheduler", action='store_true', help='turn off scheduler or not')
+    # turn off the weighted loss or not
+    parser.add_argument("--off_weighted_loss", action='store_true', help='turn off weighted loss or not')
     args = parser.parse_args()
     main(**vars(args))
