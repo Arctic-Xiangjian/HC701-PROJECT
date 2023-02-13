@@ -43,7 +43,7 @@ class Eye_APTOS(Dataset):
                 # Image to 0-1
                 image_data = data['image']
                 self.data.append(image_data)
-                self.data_id.append(i)
+                self.data_id.append(i[:-4])
         else:
             raise ValueError('mode should be train, val or test')
 
