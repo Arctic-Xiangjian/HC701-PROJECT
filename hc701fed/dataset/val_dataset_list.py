@@ -9,11 +9,6 @@ import yaml
 from hc701fed.transform.transforms import compose
 
 PATH_DATA = os.getcwd()
-transforms_file = open(os.path.join(PATH_DATA, "HC701-PROJECT/hc701fed/params/transforms.yaml"), "r")
-transforms_params = yaml.load(transforms_file, Loader=yaml.FullLoader)
-train_transforms = compose(
-    transforms_strs=transforms_params["train"],
-)
 
 
 

@@ -16,7 +16,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset, ConcatDataset
 
 
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, f1_score
 
 from hc701fed.dataset.val_dataset_list import (
     APTOS_Val,
@@ -90,8 +90,9 @@ def main(backbone,model_path,dataset,trained_dataset,mode,device):
     else:
         num_classes = 5
 
-    model_load_path = os.path.join(model_path, f"{dataset}_{backbone}_best.pth")
-    model = Baseline(backbone = backbone, num_classes = num_classes, pretrained = True,pretrained_path=model_load_path)
+    model_load_path = os.path.join(model_path, f"{trained_dataset}_{backbone}_best.pth")
+    model = Baseline(backbone = backbone, num_classes = num_classes, pretrained = False)
+    model.load_state_dict(torch.load(model_load_path))
     model.to(device)
     model.eval()
     y_true = []
@@ -110,14 +111,13 @@ def main(backbone,model_path,dataset,trained_dataset,mode,device):
                 y_true.append(y.cpu().numpy())
         y_true = np.concatenate(y_true)
         y_pred = np.concatenate(y_pred)
-        y_pred_prob = np.concatenate(y_pred_prob)
-        accuracy, f1, auc = accuracy_score(y_true, y_pred), f1_score(y_true, y_pred, average='macro'), roc_auc_score(y_true, y_pred_prob, multi_class='ovr')
+        accuracy, f1 = accuracy_score(y_true, y_pred), f1_score(y_true, y_pred, average='macro')
 
-        print(f"Accuracy: {accuracy}, F1: {f1}, AUC: {auc}")
+        print(f"Accuracy: {accuracy}, F1: {f1}")
 
         # save the result to a json file
         with open(os.path.join(model_path, f"{trained_dataset}_{dataset}_{backbone}_result.json"), "w") as f:
-            json.dump({"test_dataset" : dataset, "trained_dataset" : trained_dataset, "accuracy" : accuracy, "f1" : f1, "auc" : auc}, f)
+            json.dump({"test_dataset" : dataset, "trained_dataset" : trained_dataset, "accuracy" : accuracy, "f1" : f1}, f)
     elif mode == 'test' and (dataset == 'aptos' or dataset == 'centerlized' or dataset == 'eyepacs'):
         # we don't have the ground truth for test dataset, save the prediction to a csv file
         with open(os.path.join(model_path, f"{trained_dataset}_{dataset}_{backbone}_result.csv"), "w") as f:
@@ -142,13 +142,13 @@ def main(backbone,model_path,dataset,trained_dataset,mode,device):
         y_true = np.concatenate(y_true)
         y_pred = np.concatenate(y_pred)
         y_pred_prob = np.concatenate(y_pred_prob)
-        accuracy, f1, auc = accuracy_score(y_true, y_pred), f1_score(y_true, y_pred, average='macro'), roc_auc_score(y_true, y_pred_prob, multi_class='ovr')
-
-        print(f"Accuracy: {accuracy}, F1: {f1}, AUC: {auc}")
+        y_pred_prob = torch.softmax(torch.from_numpy(y_pred_prob), dim=1).numpy()
+        accuracy, f1= accuracy_score(y_true, y_pred), f1_score(y_true, y_pred, average='macro')
+        print(f"Accuracy: {accuracy}, F1: {f1}")
 
         # save the result to a json file
-        with open(os.path.join(model_path, f"{trained_dataset}_{dataset}_{backbone}_result.json"), "w") as f:
-            json.dump({"test_dataset" : dataset, "trained_dataset" : trained_dataset, "accuracy" : accuracy, "f1" : f1, "auc" : auc}, f)
+        with open(os.path.join(model_path, f"{trained_dataset}_{dataset}_{backbone}_test_set_result.json"), "w") as f:
+            json.dump({"test_dataset" : dataset, "trained_dataset" : trained_dataset, "accuracy" : accuracy, "f1" : f1}, f)
             
 
 
