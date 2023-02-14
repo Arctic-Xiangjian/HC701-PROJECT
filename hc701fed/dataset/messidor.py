@@ -66,7 +66,7 @@ class MESSIDOR(Dataset):
         elif self.mode == 'val':
             return self.transform(self.val_data[idx]), self.val_labels[idx]
         else:
-            return self.transform(self.data[idx]), self.labels[idx], self.data_id[idx]
+            return self.transform(self.data[idx]), self.labels[idx]
         
     def calculate_weights(self):
         if self.mode == 'train':

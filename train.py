@@ -23,12 +23,23 @@ from hc701fed.dataset.dataset_list_transform import (
     MESSIDOR_pairs_train,
     MESSIDOR_Etienne_train,
     MESSIDOR_Brest_train,
+)
+
+from hc701fed.dataset.val_dataset_list import (
     APTOS_Val,
     EyePACS_Val,
     MESSIDOR_2_Val,
     MESSIDOR_pairs_Val,
     MESSIDOR_Etienne_Val,
     MESSIDOR_Brest_Val,
+)
+from hc701fed.dataset.val_dataset_list import (
+    APTOS_Test,
+    EyePACS_Test,
+    MESSIDOR_2_Test,
+    MESSIDOR_pairs_Test,
+    MESSIDOR_Etienne_Test,
+    MESSIDOR_Brest_Test,
 )
 
 from hc701fed.model.baseline import (
@@ -58,7 +69,10 @@ def main(backbone,
     np.random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     torch.manual_seed(seed)
-
+    val_dataset_list = [APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val]
+    val_dataset_list_name = ["APTOS_Val", "EyePACS_Val", "MESSIDOR_2_Val", "MESSIDOR_pairs_Val", "MESSIDOR_Etienne_Val", "MESSIDOR_Brest_Val"]
+    test_dataset_list = [APTOS_Test, EyePACS_Test, MESSIDOR_2_Test, MESSIDOR_pairs_Test, MESSIDOR_Etienne_Test, MESSIDOR_Brest_Test]
+    test_dataset_list_name = ["APTOS_Test", "EyePACS_Test", "MESSIDOR_2_Test", "MESSIDOR_pairs_Test", "MESSIDOR_Etienne_Test", "MESSIDOR_Brest_Test"]
     # load dataset
     if dataset == "centerlized":
         Centerlized_train = WeightedConcatDataset([APTOS_train, EyePACS_train, MESSIDOR_2_train, MESSIDOR_pairs_train, MESSIDOR_Etienne_train,MESSIDOR_Brest_train])
@@ -186,6 +200,29 @@ def main(backbone,
         optimizer = str(optimizer).split(" ")[0]
         with open(os.path.join(save_path, f"{dataset}_{backbone}_{model_begin_time}.json"), "w") as f:
             json.dump({"backbone": backbone, "lr": lr, "batch_size": batch_size, "epochs": epoch, "device": device, "optimizer": optimizer, "dataset": dataset, "seed": seed, "best_acc": best_acc, "best_f1": best_f1, "train_set_f1": train_set_f1, "train_set_acc": train_set_acc, "centerlized_set_f1": centerlized_set_f1, "centerlized_set_acc": centerlized_set_acc}, f)
+    
+    # try to do the inference on the test and validation set, and save the result to a json file
+    if save_model:
+        save_result_path = os.path.join(save_path, "result")
+        if not os.path.exists(save_result_path):
+            os.mkdir(save_result_path)
+        model.load_state_dict(torch.load(os.path.join(save_path, f"{dataset}_{backbone}_best.pth")))
+        for i,j in enumerate(test_dataset_list):
+            j_loader = DataLoader(j, batch_size=64, shuffle=False)
+            acc, f1 = test(model, device, j_loader)
+            j_name = test_dataset_list_name[i]
+            print(j_name)
+            with open(os.path.join(save_result_path, f"{dataset}_{backbone}_{j_name}_test_set.json"), "w") as f:
+                json.dump({"train_dataset": dataset, "test_dataset": j_name, "acc": acc, "f1": f1}, f)
+        for i,j in enumerate(val_dataset_list):
+            j_loader = DataLoader(j, batch_size=256, shuffle=False)
+            acc, f1 = test(model, device, j_loader)
+            j_name = val_dataset_list_name[i]
+            print(j_name)
+            with open(os.path.join(save_result_path, f"{dataset}_{backbone}_{j_name}_val_set.json"), "w") as f:
+                json.dump({"train_dataset": dataset, "test_dataset": j_name, "acc": acc, "f1": f1}, f)
+
+
 
 
 if __name__=="__main__":
