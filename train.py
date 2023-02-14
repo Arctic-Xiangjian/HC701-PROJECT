@@ -211,14 +211,12 @@ def main(backbone,
             j_loader = DataLoader(j, batch_size=64, shuffle=False)
             acc, f1 = test(model, device, j_loader)
             j_name = test_dataset_list_name[i]
-            print(j_name)
             with open(os.path.join(save_result_path, f"{dataset}_{backbone}_{j_name}_test_set.json"), "w") as f:
                 json.dump({"train_dataset": dataset, "test_dataset": j_name, "acc": acc, "f1": f1}, f)
         for i,j in enumerate(val_dataset_list):
             j_loader = DataLoader(j, batch_size=256, shuffle=False)
             acc, f1 = test(model, device, j_loader)
             j_name = val_dataset_list_name[i]
-            print(j_name)
             with open(os.path.join(save_result_path, f"{dataset}_{backbone}_{j_name}_val_set.json"), "w") as f:
                 json.dump({"train_dataset": dataset, "test_dataset": j_name, "acc": acc, "f1": f1}, f)
 
