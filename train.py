@@ -69,10 +69,12 @@ def main(backbone,
     np.random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
     torch.manual_seed(seed)
-    val_dataset_list = [APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val]
-    val_dataset_list_name = ["APTOS_Val", "EyePACS_Val", "MESSIDOR_2_Val", "MESSIDOR_pairs_Val", "MESSIDOR_Etienne_Val", "MESSIDOR_Brest_Val"]
-    test_dataset_list = [APTOS_Test, EyePACS_Test, MESSIDOR_2_Test, MESSIDOR_pairs_Test, MESSIDOR_Etienne_Test, MESSIDOR_Brest_Test]
-    test_dataset_list_name = ["APTOS_Test", "EyePACS_Test", "MESSIDOR_2_Test", "MESSIDOR_pairs_Test", "MESSIDOR_Etienne_Test", "MESSIDOR_Brest_Test"]
+    MESSIDOR_Centerlized_Val = WeightedConcatDataset([MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
+    MESSIDOR_Centerlized_Test = WeightedConcatDataset([MESSIDOR_pairs_Test, MESSIDOR_Etienne_Test, MESSIDOR_Brest_Test])
+    val_dataset_list = [APTOS_Val, EyePACS_Val, MESSIDOR_2_Val,MESSIDOR_Centerlized_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val]
+    val_dataset_list_name = ["APTOS_Val", "EyePACS_Val", "MESSIDOR_2_Val","MESSIDOR_Centerlized_Val", "MESSIDOR_pairs_Val", "MESSIDOR_Etienne_Val", "MESSIDOR_Brest_Val"]
+    test_dataset_list = [APTOS_Test, EyePACS_Test, MESSIDOR_2_Test,MESSIDOR_Centerlized_Test, MESSIDOR_pairs_Test, MESSIDOR_Etienne_Test, MESSIDOR_Brest_Test]
+    test_dataset_list_name = ["APTOS_Test", "EyePACS_Test", "MESSIDOR_2_Test","MESSIDOR_Centerlized_Test", "MESSIDOR_pairs_Test", "MESSIDOR_Etienne_Test", "MESSIDOR_Brest_Test"]
     # load dataset
     if dataset == "centerlized":
         Centerlized_train = WeightedConcatDataset([APTOS_train, EyePACS_train, MESSIDOR_2_train, MESSIDOR_pairs_train, MESSIDOR_Etienne_train,MESSIDOR_Brest_train])
