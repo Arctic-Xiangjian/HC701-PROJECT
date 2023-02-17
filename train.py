@@ -139,7 +139,7 @@ def main(backbone,
     optimizer = eval(optimizer)
     optimizer = optimizer(model.parameters(), lr=lr)
     if not off_scheduler:
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0.00002)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=0.00001)
     # train
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     best_f1 = 0
@@ -185,7 +185,7 @@ def main(backbone,
         # if the f1_score is not getting better for 5 epochs, stop training
         if f1 < best_f1:
             count_no_improve += 1
-            if count_no_improve >= 40:
+            if count_no_improve >= 80:
                 break
         if not off_scheduler:
             scheduler.step()
@@ -228,7 +228,7 @@ def main(backbone,
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--backbone", type=str, default="resnet50")
-    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--lr", type=float, default=1e-4)
     parser.add_argument("--batch_size", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=2)
     parser.add_argument("--device", type=str, default="cuda")

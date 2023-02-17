@@ -70,6 +70,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
             seed, use_wandb, 
             wandb_project, wandb_entity,
             save_model, checkpoint_path,
+            use_scheduler,
             # FedAvg parameters
             num_local_epochs, num_comm_rounds,data_set_mode,
 ):
@@ -142,6 +143,10 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
     model_begin_time = datetime.now().strftime('%Y%m%d_%H%M%S')
     non_improving_rounds = 0
     lr_with_decay = copy.deepcopy(lr)
+    if use_scheduler:
+        model_for_scheduler = copy.deepcopy(model)
+        optimizer_scheduler = copy.deepcopy(optimizer(model_for_scheduler.parameters(), lr=lr))
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_scheduler, T_max=10,eta_min=0.00001)
     for comm_round in range(num_comm_rounds):
         # Local training
         models_list_new = []
@@ -159,6 +164,10 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
                 key_avg += model.state_dict()[key]*len(train_dataloader_iter)/total_train_iters
             global_state_dict[key] = key_avg
         model_global.load_state_dict(global_state_dict)
+        # make lr_with_decay decay
+        if use_scheduler:
+            scheduler.step()
+            lr_with_decay = optimizer_scheduler.param_groups[0]['lr']
 
 
         # Validation
@@ -178,12 +187,12 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
                 save_model_path = os.path.join(save_path_meta, model_begin_time)
                 if not os.path.exists(save_model_path):
                     os.makedirs(save_model_path)
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+comm_round+'_model.pt'))
+                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
                 torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
                 print('best model saved')
             else:
                 non_improving_rounds += 1
-                if non_improving_rounds >= 40:
+                if non_improving_rounds >= 80:
                     break
     if use_wandb:
         run.finish()
@@ -198,7 +207,10 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
         test_result[dataset_name+'_test_acc'] = test_acc
         test_result[dataset_name+'_test_f1'] = test_f1
         print(dataset_name+'_test_acc: ', test_acc, dataset_name+'_test_f1: ', test_f1)
+    # try to sava some config for clarity
     if save_model:
+        with open(os.path.join(save_model_path, 'config.json'), 'w') as f:
+            json.dump(vars(args), f)
         with open(os.path.join(save_model_path, 'test_result.json'), 'w') as f:
             json.dump(test_result, f)
 
@@ -207,7 +219,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--backbone', type=str, default='resnet50')
-    parser.add_argument('--lr', type=float, default=0.001)
+    parser.add_argument('--lr', type=float, default=0.0001)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--optimizer', type=str, default='torch.optim.AdamW')
@@ -217,6 +229,7 @@ if __name__ == '__main__':
     parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument('--checkpoint_path', type=str, default='none')
+    parser.add_argument('--use_scheduler', action='store_true', help='use scheduler or not')
     # FedAvg parameters
     parser.add_argument('--num_local_epochs', type=int, default=1)
     parser.add_argument('--num_comm_rounds', type=int, default=500)
