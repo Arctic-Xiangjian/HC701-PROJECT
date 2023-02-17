@@ -197,6 +197,8 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
     if use_wandb:
         run.finish()
     # Test
+    # load the best model
+    val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
     test_result = {}
     Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
     print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
