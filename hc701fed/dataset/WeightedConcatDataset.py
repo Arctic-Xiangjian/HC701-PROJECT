@@ -1,9 +1,9 @@
 from torch.utils.data import ConcatDataset
-
 import torch
 
 from sklearn.utils.class_weight import compute_class_weight
 
+import numpy as np
 
 
 class WeightedConcatDataset(ConcatDataset):
@@ -15,6 +15,7 @@ class WeightedConcatDataset(ConcatDataset):
         labels = []
         for dataset in self.datasets:
             labels.extend([sample[1] for sample in dataset])
+        labels = list(np.array(labels).flatten())
         class_weights = compute_class_weight(
             class_weight='balanced',
             classes=list(set(labels)),

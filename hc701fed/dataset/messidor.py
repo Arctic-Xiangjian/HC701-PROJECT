@@ -44,7 +44,7 @@ class MESSIDOR(Dataset):
                 # Image to 0-1
                 image_data = data['image']
                 self.data.append(image_data)
-                self.labels.append(data['label'])
+                self.labels.append(np.array(data['label'], dtype=np.int64))
                 self.data_id.append(i[:-4])
         else:
             raise ValueError('mode should be train, val or test')

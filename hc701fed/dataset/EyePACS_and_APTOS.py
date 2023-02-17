@@ -41,7 +41,7 @@ class Eye_APTOS(Dataset):
                 # Image to 0-1
                 image_data = data['image']
                 self.data.append(image_data)
-                self.labels.append(np.array(data['label']))
+                self.labels.append(np.array(data['label'], dtype=np.int64))
                 self.data_id.append(i[:-4])
         elif self.mode == 'val':
             self.data_path = os.path.join(self.data_dir, 'val')
