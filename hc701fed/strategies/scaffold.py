@@ -52,38 +52,25 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
-def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device):
-    model_to_train = copy.deepcopy(model)
-    global_model = copy.deepcopy(model)
-    optimizer = optimizer(model_to_train.parameters(), lr=lr)
-    model_to_train.train()
-    model_to_train.to(device)
-    for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
-        data, target = data.to(device), target.to(device, torch.long)
-        optimizer.zero_grad()
-        output = model_to_train(data)
-        loss = LOSS(output, target)
-        # Add FedProx regularization term
-        local_weights = []
-        global_weights = []
-        for param, global_param in zip(model_to_train.parameters(), global_model.parameters()):
-            local_weights.append(param.detach().view(-1))
-            global_weights.append(global_param.detach().view(-1))
-        local_weights = torch.cat(local_weights).to(device)
-        global_weights = torch.cat(global_weights).to(device)
-        l2_reg = torch.linalg.vector_norm(local_weights - global_weights, ord=2)
-        loss += (mu / 2.0) * l2_reg
-        loss.backward()
-        optimizer.step()
-    return model_to_train
 
-def fed_prox(backbone,lr, batch_size, device, optimizer,
+def scaffold_local_step(
+        model, train_dataloader, optimizer, LOSS, lr, device,
+        # here is the scaffold pamameters
+        correction_state
+):
+    pass
+
+
+
+
+
+def scaffold(backbone,lr, batch_size, device, optimizer,
             seed, use_wandb, 
             wandb_project, wandb_entity,
             save_model, checkpoint_path,
             use_scheduler,
-            # FedProx parameters
-            num_local_epochs, num_comm_rounds,data_set_mode,mu,
+            # scaffold parameters
+            num_local_epochs, num_comm_rounds,data_set_mode
 ):
     
     # set seed
@@ -244,10 +231,9 @@ if __name__ == '__main__':
     parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument('--checkpoint_path', type=str, default='none')
     parser.add_argument('--use_scheduler', action='store_true', help='use scheduler or not')
-    # Fedprox parameters
+    # scaffold parameters
     parser.add_argument('--num_local_epochs', type=int, default=1)
     parser.add_argument('--num_comm_rounds', type=int, default=2)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
-    parser.add_argument('--mu', type=float, default=0.1)
     args = parser.parse_args()
-    fed_prox(**vars(args))
+    scaffold(**vars(args))
