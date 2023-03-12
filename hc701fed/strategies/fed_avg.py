@@ -52,18 +52,23 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
-def local_step(model, train_dataloader, optimizer, LOSS,lr, device):
+def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps=100):
     model_to_train = copy.deepcopy(model)
     optimizer = optimizer(model_to_train.parameters() , lr = lr)
     model_to_train.train()
     model_to_train.to(device)
-    for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
-        data, target = data.to(device), target.to(device,torch.long)
-        optimizer.zero_grad()
-        output = model_to_train(data)
-        loss = LOSS(output, target)
-        loss.backward()
-        optimizer.step()
+    ls = 0
+    while ls < local_steps:
+        for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
+            data, target = data.to(device), target.to(device,torch.long)
+            optimizer.zero_grad()
+            output = model_to_train(data)
+            loss = LOSS(output, target)
+            loss.backward()
+            optimizer.step()
+            ls += 1
+            if ls >= local_steps:
+                break
     return model_to_train
 
 def fed_avg(backbone,lr, batch_size, device, optimizer,
