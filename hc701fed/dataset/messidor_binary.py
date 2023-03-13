@@ -10,9 +10,12 @@ from torchvision import transforms
 from torchvision import utils
 
 class MESSIDOR_binary(Dataset):
-    def __init__(self, data_dir, transform=None, mode='train'):
+    def __init__(self, data_dir, transform_=None, mode='train'):
         self.data_dir = data_dir
-        self.transform = transforms.ToTensor() if transform is None else transform
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),
+            # transforms.Normalize(mean=[0.5145, 0.2434, 0.0807],std=[0.2870, 0.1415, 0.0531])
+        ]) if transform_ is None else transform_
         self.mode = mode
         self.data = []
         self.labels = []

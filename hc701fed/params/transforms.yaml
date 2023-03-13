@@ -1,7 +1,11 @@
 process: {}
 train:
   horizontal_flip:
-    p: 0.5
-  random_rotation:
-    degrees: [-10, 10]
+    p: 0
+  # random_rotation:
+  #   degrees: [-10, 10]
+  # vertical_flip:
+  #   p: 0.5
+  # random_distortion:
+  #   p: 0.5
 val: {}

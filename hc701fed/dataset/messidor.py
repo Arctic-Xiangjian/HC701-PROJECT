@@ -18,9 +18,9 @@ data_dir_options = {
 }
 
 class MESSIDOR(Dataset):
-    def __init__(self, data_dir, transform=None, mode='train',train_val_split=0.25):
+    def __init__(self, data_dir, transform_=None, mode='train',train_val_split=0.25):
         self.data_dir = data_dir
-        self.transform = transforms.ToTensor() if transform is None else transform
+        self.transform = transforms.ToTensor() if transform_ is None else transform_
         self.mode = mode
         self.train_val_split = train_val_split
 

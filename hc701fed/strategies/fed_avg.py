@@ -52,7 +52,7 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
-def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps=100):
+def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps):
     model_to_train = copy.deepcopy(model)
     optimizer = optimizer(model_to_train.parameters() , lr = lr)
     model_to_train.train()
@@ -77,7 +77,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
             save_model, checkpoint_path,
             use_scheduler,
             # FedAvg parameters
-            num_local_epochs, num_comm_rounds,data_set_mode,
+            num_local_epochs, num_comm_rounds,data_set_mode, local_steps,
 ):
     
     # set seed
@@ -156,7 +156,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
         # Local training
         models_list_new = []
         for i, train_dataloader_iter in enumerate(train_dataloader_list):
-            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device)
+            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,local_steps=local_steps)
             # Try to print the learning rate to see whether the scheduler works
             # print(optimizer.param_groups[0]['lr'])
             models_list_new.append(copy.deepcopy(model_new))
@@ -241,6 +241,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_local_epochs', type=int, default=1)
     parser.add_argument('--num_comm_rounds', type=int, default=500)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
+    parser.add_argument('--local_steps', type=int, default=1)
     args = parser.parse_args()
     fed_avg(**vars(args))
 
