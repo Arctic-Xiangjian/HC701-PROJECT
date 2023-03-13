@@ -1,5 +1,6 @@
 from hc701fed.dataset.EyePACS_and_APTOS import Eye_APTOS
 from hc701fed.dataset.messidor import MESSIDOR
+from hc701fed.dataset.messidor_binary import MESSIDOR_binary
 
 from hc701fed.dataset.WeightedConcatDataset import WeightedConcatDataset
 
@@ -9,7 +10,7 @@ import yaml
 from hc701fed.transform.transforms import compose
 
 PATH_DATA = os.getcwd()
-transforms_file = open(os.path.join(PATH_DATA, "HC701-PROJECT/hc701fed/params/transforms.yaml"), "r")
+transforms_file = open(os.path.join(PATH_DATA, "hc701fed/params/transforms.yaml"), "r")
 transforms_params = yaml.load(transforms_file, Loader=yaml.FullLoader)
 train_transforms = compose(
     transforms_strs=transforms_params["train"],
@@ -29,6 +30,19 @@ MESSIDOR_data_dir_options = {
     'messidor_Brest-without_dilation' : os.path.join(PATH_DATA, 'preprocessed/messidor/messidor_Brest-without_dilation')
 }
 
+MESSIDOR_binary_dir_options = {
+    'messidor_pairs' : os.path.join(PATH_DATA, 'preprocessed/messidor_biany/messidor_pairs'),
+    'messidor_Etienne' : os.path.join(PATH_DATA, 'preprocessed/messidor_biany/messidor_Etienne'),
+    'messidor_Brest-without_dilation' : os.path.join(PATH_DATA, 'preprocessed/messidor_biany/messidor_Brest-without_dilation')
+}
+
+MESSIDOR_binary_pairs_train = MESSIDOR_binary(data_dir=MESSIDOR_binary_dir_options['messidor_pairs'], mode='train', transform=train_transforms)
+MESSIDOR_binary_Etienne_train = MESSIDOR_binary(data_dir=MESSIDOR_binary_dir_options['messidor_Etienne'], mode='train', transform=train_transforms)
+MESSIDOR_binary_Brest_train = MESSIDOR_binary(data_dir=MESSIDOR_binary_dir_options['messidor_Brest-without_dilation'], mode='train', transform=train_transforms)
+
+MESSIDOR_binary_pairs_test = MESSIDOR_binary(data_dir=MESSIDOR_binary_dir_options['messidor_pairs'], mode='test', transform=None)
+MESSIDOR_binary_Etienne_test = MESSIDOR_binary(data_dir=MESSIDOR_binary_dir_options['messidor_Etienne'], mode='test', transform=None)
+MESSIDOR_binary_Brest_test = MESSIDOR_binary(data_dir=MESSIDOR_binary_dir_options['messidor_Brest-without_dilation'], mode='test', transform=None)
 
 APTOS_train = Eye_APTOS(data_dir=Eye_APTOS_data_dir_options['APTOS'], mode='train', transform=train_transforms)
 EyePACS_train = Eye_APTOS(data_dir=Eye_APTOS_data_dir_options['EyePACS'], mode='train', transform=train_transforms)
