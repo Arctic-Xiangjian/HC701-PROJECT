@@ -76,7 +76,7 @@ train_list = [train_loader_pairs, train_loader_Etienne, train_loader_Brest]
 test_list = [test_loader_pairs, test_loader_Etienne, test_loader_Brest]
 
 
-for noise_scale in [0.1,0.2,0.3,0.5,1,1.5,2,2.5,3]:
+for noise_scale in [0.1,0.5,1,3,5]:
     for seed in [42,43,44]:
         print('seed: {}, noise_scale: {}'.format(seed, noise_scale))
         cudnn.deterministic = True
@@ -138,7 +138,7 @@ for noise_scale in [0.1,0.2,0.3,0.5,1,1.5,2,2.5,3]:
             clip_threshold=learn_rate*clip_threshold
             update_tensor_clip=update_tensor/torch.max(torch.tensor([1]).to(device),updates_norm/clip_threshold)
             # add noise
-            update_tensor_clip+=torch.normal(mean=dp_mean, std=learn_rate*dp_std*clip_threshold*total_round,size=update_tensor_clip.shape).to('cuda')
+            update_tensor_clip+=torch.normal(mean=dp_mean, std=learn_rate*dp_std*clip_threshold*torch.sqrt(torch.tensor(total_round)),size=update_tensor_clip.shape).to('cuda')
             return update_tensor_clip
         
         def update_model(dp_update_tensor: torch.Tensor(), model_pre: torch.nn.modules,model_t: torch.nn.modules):
@@ -183,7 +183,7 @@ for noise_scale in [0.1,0.2,0.3,0.5,1,1.5,2,2.5,3]:
                 _model.load_state_dict(fed_state_dict)
             return _models_list
         
-        for com_round in [1,2,5,10,20,50,100,200,500,1000]:
+        for com_round in [1000,500,200,100,50,20,10,5,2,1]:
             global_models=[copy.deepcopy(model) for i in range(3)]
             for rounds in tqdm(range(com_round)):
                 models=local_step(train_list,1000//com_round,global_models[0],com_round)
