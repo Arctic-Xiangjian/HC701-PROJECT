@@ -77,7 +77,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
             save_model, checkpoint_path,
             use_scheduler,
             # FedAvg parameters
-            num_local_epochs, num_comm_rounds,data_set_mode, local_steps,
+            num_comm_rounds,data_set_mode, local_steps,
 ):
     
     # set seed
@@ -192,12 +192,12 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
                 save_model_path = os.path.join(save_path_meta, model_begin_time)
                 if not os.path.exists(save_model_path):
                     os.makedirs(save_model_path)
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
+                # torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
                 torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
                 print('best model saved')
             else:
                 non_improving_rounds += 1
-                if non_improving_rounds >= 80:
+                if non_improving_rounds >= 3000:
                     break
     if use_wandb:
         run.finish()
@@ -238,10 +238,9 @@ if __name__ == '__main__':
     parser.add_argument('--checkpoint_path', type=str, default='none')
     parser.add_argument('--use_scheduler', action='store_true', help='use scheduler or not')
     # FedAvg parameters
-    parser.add_argument('--num_local_epochs', type=int, default=1)
-    parser.add_argument('--num_comm_rounds', type=int, default=500)
+    parser.add_argument('--num_comm_rounds', type=int, default=50000)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
-    parser.add_argument('--local_steps', type=int, default=1)
+    parser.add_argument('--local_steps', type=int, default=10)
     args = parser.parse_args()
     fed_avg(**vars(args))
 

@@ -52,12 +52,13 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
-def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device):
+def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device,local_steps):
     model_to_train = copy.deepcopy(model)
     global_model = copy.deepcopy(model)
     optimizer = optimizer(model_to_train.parameters(), lr=lr)
     model_to_train.train()
     model_to_train.to(device)
+    ls = 0
     for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
         data, target = data.to(device), target.to(device, torch.long)
         optimizer.zero_grad()
@@ -75,6 +76,9 @@ def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device):
         loss += (mu / 2.0) * l2_reg
         loss.backward()
         optimizer.step()
+        ls += 1
+        if ls == local_steps:
+            break
     return model_to_train
 
 def fed_prox(backbone,lr, batch_size, device, optimizer,
@@ -83,7 +87,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
             save_model, checkpoint_path,
             use_scheduler,
             # FedProx parameters
-            num_local_epochs, num_comm_rounds,data_set_mode,mu,
+            num_local_epochs, num_comm_rounds,data_set_mode,mu,local_steps
 ):
     
     # set seed
@@ -162,7 +166,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
         # Local training
         models_list_new = []
         for i, train_dataloader_iter in enumerate(train_dataloader_list):
-            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu)
+            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu,local_steps=local_steps)
             # Try to print the learning rate to see whether the scheduler works
             # print(optimizer.param_groups[0]['lr'])
             models_list_new.append(copy.deepcopy(model_new))
@@ -249,5 +253,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_comm_rounds', type=int, default=2)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
     parser.add_argument('--mu', type=float, default=0.1)
+    parser.add_argument('--local_steps', type=int, default=1)
     args = parser.parse_args()
     fed_prox(**vars(args))
