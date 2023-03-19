@@ -1,0 +1,14 @@
+horizontal_flip {'p': 0}
+seed: 42, noise_scale: 0.5, clip_value: 10
+Round: 600 Accuracy: 0.482
+Round: 600 f1_score: 0.3252361673414305
+Round: 600 average_Acc_f1: 0.4036180836707153
+
+
+seed: 43, noise_scale: 0.5, clip_value: 10
+Round: 600 Accuracy: 0.482
+Round: 600 f1_score: 0.3252361673414305
+Round: 600 average_Acc_f1: 0.4036180836707153
+
+
+seed: 44, noise_scale: 0.5, clip_value: 10

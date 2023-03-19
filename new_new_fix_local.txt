@@ -211,3 +211,112 @@ Round: 100 f1_score: 0.8959933435739886
 Round: 100 average_Acc_f1: 0.8959966717869943
 
 
+Round: 1000 Accuracy: 0.482
+Round: 1000 f1_score: 0.3252361673414305
+Round: 1000 average_Acc_f1: 0.4036180836707153
+
+
+-------------------------------------------------------------------------------------
+seed: 42, noise_scale: 3, clip_value: 10
+Round: 1 Accuracy: 0.518
+Round: 1 f1_score: 0.3412384716732543
+Round: 1 average_Acc_f1: 0.42961923583662714
+
+
+Round: 2 Accuracy: 0.542
+Round: 2 f1_score: 0.4003697283596316
+Round: 2 average_Acc_f1: 0.4711848641798158
+
+
+Round: 5 Accuracy: 0.588
+Round: 5 f1_score: 0.5149837072196795
+Round: 5 average_Acc_f1: 0.5514918536098397
+
+
+Round: 10 Accuracy: 0.706
+Round: 10 f1_score: 0.7012571586507391
+Round: 10 average_Acc_f1: 0.7036285793253696
+
+
+Round: 20 Accuracy: 0.75
+Round: 20 f1_score: 0.7439269720696027
+Round: 20 average_Acc_f1: 0.7469634860348013
+
+
+Round: 100 Accuracy: 0.844
+Round: 100 f1_score: 0.8435092449922958
+Round: 100 average_Acc_f1: 0.8437546224961479
+
+
+Round: 1000 Accuracy: 0.482
+Round: 1000 f1_score: 0.3252361673414305
+Round: 1000 average_Acc_f1: 0.4036180836707153
+
+
+seed: 43, noise_scale: 3, clip_value: 10
+Round: 1 Accuracy: 0.524
+Round: 1 f1_score: 0.3548876745598057
+Round: 1 average_Acc_f1: 0.4394438372799029
+
+
+Round: 2 Accuracy: 0.612
+Round: 2 f1_score: 0.5758339018033618
+Round: 2 average_Acc_f1: 0.5939169509016808
+
+
+Round: 5 Accuracy: 0.654
+Round: 5 f1_score: 0.6259152103307948
+Round: 5 average_Acc_f1: 0.6399576051653975
+
+
+Round: 10 Accuracy: 0.706
+Round: 10 f1_score: 0.7031490434129378
+Round: 10 average_Acc_f1: 0.704574521706469
+
+
+Round: 20 Accuracy: 0.774
+Round: 20 f1_score: 0.7739267522677347
+Round: 20 average_Acc_f1: 0.7739633761338673
+
+
+Round: 100 Accuracy: 0.846
+Round: 100 f1_score: 0.8459254279071071
+Round: 100 average_Acc_f1: 0.8459627139535535
+
+
+Round: 1000 Accuracy: 0.482
+Round: 1000 f1_score: 0.3252361673414305
+Round: 1000 average_Acc_f1: 0.4036180836707153
+
+
+seed: 44, noise_scale: 3, clip_value: 10
+Round: 1 Accuracy: 0.518
+Round: 1 f1_score: 0.3412384716732543
+Round: 1 average_Acc_f1: 0.42961923583662714
+
+
+Round: 2 Accuracy: 0.644
+Round: 2 f1_score: 0.6285413779862769
+Round: 2 average_Acc_f1: 0.6362706889931384
+
+
+Round: 5 Accuracy: 0.69
+Round: 5 f1_score: 0.6879014493453984
+Round: 5 average_Acc_f1: 0.6889507246726991
+
+
+Round: 10 Accuracy: 0.708
+Round: 10 f1_score: 0.70146079730415
+Round: 10 average_Acc_f1: 0.704730398652075
+
+
+Round: 20 Accuracy: 0.766
+Round: 20 f1_score: 0.7655864945764328
+Round: 20 average_Acc_f1: 0.7657932472882164
+
+
+Round: 100 Accuracy: 0.84
+Round: 100 f1_score: 0.8393419446051025
+Round: 100 average_Acc_f1: 0.8396709723025513
+
+
