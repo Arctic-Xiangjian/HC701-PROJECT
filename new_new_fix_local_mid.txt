@@ -1,2 +1,0 @@
-horizontal_flip {'p': 0}
-seed: 42, noise_scale: 0.5, clip_value: 10
