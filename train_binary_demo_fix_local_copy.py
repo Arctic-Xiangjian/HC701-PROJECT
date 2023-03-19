@@ -59,7 +59,7 @@ def test(model_, test_loader, device):
             y_true.extend(labels.cpu().numpy())
     return y_true, y_pred
 
-device = torch.device("cuda:3" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
 
 # Data loader
 train_loader_pairs = DataLoader(MESSIDOR_binary_pairs_train, batch_size=batch_size, shuffle=True,num_workers=4)
@@ -137,7 +137,7 @@ for clip_value in [10,30]:
                 clip_threshold=learn_rate*clip_threshold
                 update_tensor_clip=update_tensor/torch.max(torch.tensor([1]).to(device),updates_norm/clip_threshold)
                 # add noise
-                update_tensor_clip+=torch.normal(mean=dp_mean, std=learn_rate*dp_std*clip_threshold*torch.sqrt(torch.tensor(total_round)),size=update_tensor_clip.shape).to('cuda:3')
+                update_tensor_clip+=torch.normal(mean=dp_mean, std=learn_rate*dp_std*clip_threshold*torch.sqrt(torch.tensor(total_round)),size=update_tensor_clip.shape).to('cuda:2')
                 return update_tensor_clip
             
             def update_model(dp_update_tensor: torch.Tensor(), model_pre: torch.nn.modules,model_t: torch.nn.modules):
@@ -182,7 +182,7 @@ for clip_value in [10,30]:
                     _model.load_state_dict(fed_state_dict)
                 return _models_list
             
-            for com_round in [1,2,5,10,20,100,1000]:
+            for com_round in [300,500,800]:
                 global_models=[copy.deepcopy(model) for i in range(3)]
                 for rounds in tqdm(range(com_round)):
                     models=local_step(train_list,50,global_models[0],com_round)
