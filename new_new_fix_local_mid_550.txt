@@ -1,8 +1,8 @@
 horizontal_flip {'p': 0}
 seed: 42, noise_scale: 0.5, clip_value: 10
-Round: 500 Accuracy: 0.882
-Round: 500 f1_score: 0.8819617556088173
-Round: 500 average_Acc_f1: 0.8819808778044087
+Round: 550 Accuracy: 0.892
+Round: 550 f1_score: 0.8918598503660744
+Round: 550 average_Acc_f1: 0.8919299251830373
 
 
 seed: 43, noise_scale: 0.5, clip_value: 10

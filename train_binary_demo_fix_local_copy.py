@@ -182,7 +182,7 @@ for clip_value in [10,30]:
                     _model.load_state_dict(fed_state_dict)
                 return _models_list
             
-            for com_round in [500]:
+            for com_round in [550]:
                 global_models=[copy.deepcopy(model) for i in range(3)]
                 for rounds in tqdm(range(com_round)):
                     models=local_step(train_list,50,global_models[0],com_round)
