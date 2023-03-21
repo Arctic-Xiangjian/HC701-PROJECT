@@ -79,8 +79,8 @@ def main(backbone,
     if dataset == "centerlized":
         Centerlized_train = WeightedConcatDataset([APTOS_train, EyePACS_train, MESSIDOR_2_train, MESSIDOR_pairs_train, MESSIDOR_Etienne_train,MESSIDOR_Brest_train])
         Centerlized_Val = WeightedConcatDataset([APTOS_Val, EyePACS_Val, MESSIDOR_2_Val, MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
-        train_dataset = DataLoader(Centerlized_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(Centerlized_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(Centerlized_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(Centerlized_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         LOSS = torch.nn.CrossEntropyLoss(weight=Centerlized_train.calculate_weights())
     elif dataset == "messidor":
         MESSIDOR_Centerlized_train = WeightedConcatDataset([MESSIDOR_pairs_train, MESSIDOR_Etienne_train,MESSIDOR_Brest_train])
@@ -90,30 +90,30 @@ def main(backbone,
         num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Centerlized_train.calculate_weights())
     elif dataset == "aptos":
-        train_dataset = DataLoader(APTOS_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(APTOS_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(APTOS_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(APTOS_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         LOSS = torch.nn.CrossEntropyLoss(weight=APTOS_train.calculate_weights())
     elif dataset == "eyepacs":
-        train_dataset = DataLoader(EyePACS_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(EyePACS_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(EyePACS_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(EyePACS_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         LOSS = torch.nn.CrossEntropyLoss(weight=EyePACS_train.calculate_weights())
     elif dataset == "messidor2":
-        train_dataset = DataLoader(MESSIDOR_2_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(MESSIDOR_2_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(MESSIDOR_2_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(MESSIDOR_2_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_2_train.calculate_weights())
     elif dataset == "messidor_pairs":
-        train_dataset = DataLoader(MESSIDOR_pairs_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(MESSIDOR_pairs_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(MESSIDOR_pairs_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(MESSIDOR_pairs_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_pairs_train.calculate_weights())
     elif dataset == "messidor_etienne":
-        train_dataset = DataLoader(MESSIDOR_Etienne_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(MESSIDOR_Etienne_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(MESSIDOR_Etienne_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(MESSIDOR_Etienne_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Etienne_train.calculate_weights())
     elif dataset == "messidor_brest":
-        train_dataset = DataLoader(MESSIDOR_Brest_train, batch_size=batch_size, shuffle=True)
-        val_dataset = DataLoader(MESSIDOR_Brest_Val, batch_size=batch_size, shuffle=False)
+        train_dataset = DataLoader(MESSIDOR_Brest_train, batch_size=batch_size, shuffle=True,num_workers=4)
+        val_dataset = DataLoader(MESSIDOR_Brest_Val, batch_size=batch_size, shuffle=False,num_workers=4)
         num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Brest_train.calculate_weights())
     else:
