@@ -74,12 +74,13 @@ def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device,local_st
         global_weights = torch.cat(global_weights).to(device)
         l2_reg = torch.linalg.vector_norm(local_weights - global_weights, ord=2)
         loss += (mu / 2.0) * l2_reg
+        
         loss.backward()
         optimizer.step()
         ls += 1
         if ls == local_steps:
             break
-    return model_to_train
+    return model_to_train,loss.detach().cpu().numpy()
 
 def fed_prox(backbone,lr, batch_size, device, optimizer,
             seed, use_wandb, 
@@ -166,7 +167,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
         # Local training
         models_list_new = []
         for i, train_dataloader_iter in enumerate(train_dataloader_list):
-            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu,local_steps=local_steps)
+            model_new,loss = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu,local_steps=local_steps)
             # Try to print the learning rate to see whether the scheduler works
             # print(optimizer.param_groups[0]['lr'])
             models_list_new.append(copy.deepcopy(model_new))
@@ -190,7 +191,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
         val_acc,val_f1 = test(val_model,device,Centrilized_val_dataloader)
 
         if use_wandb:
-            wandb.log({"val_acc": val_acc, "val_f1": val_f1})
+            wandb.log({"val_acc": val_acc, "val_f1": val_f1,'loss':loss})
         
         if save_model:
             if val_f1 > best_f1:
@@ -202,8 +203,8 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
                 save_model_path = os.path.join(save_path_meta, model_begin_time)
                 if not os.path.exists(save_model_path):
                     os.makedirs(save_model_path)
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
+                # torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
+                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_prox'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
                 print('best model saved')
             else:
                 non_improving_rounds += 1
@@ -214,7 +215,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
     # Test
     # load the best model
     if save_model:
-        val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
+        val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_prox'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
         test_result = {}
         Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
         print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
