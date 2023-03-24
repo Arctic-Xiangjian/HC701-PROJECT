@@ -52,14 +52,48 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
+def init_correction_state(model,device):
+    correction_state = []
+    for param in model.parameters():
+        correction_state.append(torch.zeros_like(param, requires_grad=False).to(device))
+    return correction_state
 
 def scaffold_local_step(
         model, train_dataloader, optimizer, LOSS, lr, device,
-        # here is the scaffold pamameters
-        correction_state
+        correction_state,local_steps
 ):
-    pass
+    model_to_train = copy.deepcopy(model)
+    model_to_train.train()
+    model_to_train.to(device)
+    
+    optimizer = optimizer(model_to_train.parameters(), lr=lr)
+    ls_conut = 0
+    for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
+        data, target = data.to(device), target.to(device, torch.long)
+        
+        optimizer.zero_grad()
+        output = model_to_train(data)
+        loss = LOSS(output, target)
+        loss.backward()
 
+        # Apply the correction term to the gradients
+        with torch.no_grad():
+            for param, correction in zip(model_to_train.parameters(), correction_state):
+                param.grad -= correction
+
+        # Update the optimizer with the modified gradients
+        optimizer.step()
+        ls_conut += 1
+
+        # Update the correction_state
+        with torch.no_grad():
+            for param, correction in zip(model_to_train.parameters(), correction_state):
+                correction -= param.grad
+
+        if ls_conut == local_steps:
+            break
+
+    return model_to_train, correction_state
 
 
 
@@ -70,7 +104,7 @@ def scaffold(backbone,lr, batch_size, device, optimizer,
             save_model, checkpoint_path,
             use_scheduler,
             # scaffold parameters
-            num_local_epochs, num_comm_rounds,data_set_mode
+            num_comm_rounds,data_set_mode,local_steps
 ):
     
     # set seed
@@ -145,11 +179,12 @@ def scaffold(backbone,lr, batch_size, device, optimizer,
         model_for_scheduler = copy.deepcopy(model)
         optimizer_scheduler = copy.deepcopy(optimizer(model_for_scheduler.parameters(), lr=lr))
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_scheduler, T_max=10,eta_min=0.00001)
+    corr_state = init_correction_state(model=model, device=device)
     for comm_round in range(num_comm_rounds):
         # Local training
         models_list_new = []
         for i, train_dataloader_iter in enumerate(train_dataloader_list):
-            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu)
+            model_new , corr_state = scaffold_local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device, correction_state=corr_state,local_steps=local_steps)
             # Try to print the learning rate to see whether the scheduler works
             # print(optimizer.param_groups[0]['lr'])
             models_list_new.append(copy.deepcopy(model_new))
@@ -179,25 +214,25 @@ def scaffold(backbone,lr, batch_size, device, optimizer,
             if val_f1 > best_f1:
                 non_improving_rounds = 0
                 best_f1 = val_f1
-                save_path_meta = os.path.join(checkpoint_path, 'fed_prox_'+data_set_mode+'_'+str(seed))
+                save_path_meta = os.path.join(checkpoint_path, 'scaffold_'+data_set_mode+'_'+str(seed))
                 if not os.path.exists(save_path_meta):
                     os.makedirs(save_path_meta)
                 save_model_path = os.path.join(save_path_meta, model_begin_time)
                 if not os.path.exists(save_model_path):
                     os.makedirs(save_model_path)
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
+                # torch.save(val_model.state_dict(), os.path.join(save_model_path, 'scaffold'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
+                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'scaffold'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
                 print('best model saved')
             else:
                 non_improving_rounds += 1
-                if non_improving_rounds >= 80:
+                if non_improving_rounds >= 500:
                     break
     if use_wandb:
         run.finish()
     # Test
     # load the best model
     if save_model:
-        val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
+        val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'scaffold'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
         test_result = {}
         Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
         print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
@@ -221,18 +256,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--backbone', type=str, default='resnet50')
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--optimizer', type=str, default='torch.optim.AdamW')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument("--use_wandb", action='store_true', help='use wandb or not')
-    parser.add_argument('--wandb_project', type=str, default='Fedprox_hc701')
+    parser.add_argument('--wandb_project', type=str, default='scaffold_hc701')
     parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument('--checkpoint_path', type=str, default='none')
     parser.add_argument('--use_scheduler', action='store_true', help='use scheduler or not')
     # scaffold parameters
-    parser.add_argument('--num_local_epochs', type=int, default=1)
+    parser.add_argument('--local_steps', type=int, default=1)
     parser.add_argument('--num_comm_rounds', type=int, default=2)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
     args = parser.parse_args()

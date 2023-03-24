@@ -208,7 +208,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
                 print('best model saved')
             else:
                 non_improving_rounds += 1
-                if non_improving_rounds >= 80:
+                if non_improving_rounds >= 500:
                     break
     if use_wandb:
         run.finish()

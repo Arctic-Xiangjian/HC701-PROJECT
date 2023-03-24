@@ -53,6 +53,7 @@ def main(backbone,
          wandb_project, wandb_entity,
          save_model, checkpoint_path,
          off_scheduler,off_weighted_loss,
+         trian_mode_messidor_baseline,
          num_classes=5
          ):
     
@@ -87,7 +88,8 @@ def main(backbone,
         MESSIDOR_Centerlized_Val = WeightedConcatDataset([MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
         train_dataset = DataLoader(MESSIDOR_Centerlized_train, batch_size=batch_size, shuffle=True)
         val_dataset = DataLoader(MESSIDOR_Centerlized_Val, batch_size=batch_size, shuffle=False)
-        num_classes = 4
+        if trian_mode_messidor_baseline:
+            num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Centerlized_train.calculate_weights())
     elif dataset == "aptos":
         train_dataset = DataLoader(APTOS_train, batch_size=batch_size, shuffle=True,num_workers=4)
@@ -104,17 +106,20 @@ def main(backbone,
     elif dataset == "messidor_pairs":
         train_dataset = DataLoader(MESSIDOR_pairs_train, batch_size=batch_size, shuffle=True,num_workers=4)
         val_dataset = DataLoader(MESSIDOR_pairs_Val, batch_size=batch_size, shuffle=False,num_workers=4)
-        num_classes = 4
+        if trian_mode_messidor_baseline:
+            num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_pairs_train.calculate_weights())
     elif dataset == "messidor_etienne":
         train_dataset = DataLoader(MESSIDOR_Etienne_train, batch_size=batch_size, shuffle=True,num_workers=4)
         val_dataset = DataLoader(MESSIDOR_Etienne_Val, batch_size=batch_size, shuffle=False,num_workers=4)
-        num_classes = 4
+        if trian_mode_messidor_baseline:
+            num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Etienne_train.calculate_weights())
     elif dataset == "messidor_brest":
         train_dataset = DataLoader(MESSIDOR_Brest_train, batch_size=batch_size, shuffle=True,num_workers=4)
         val_dataset = DataLoader(MESSIDOR_Brest_Val, batch_size=batch_size, shuffle=False,num_workers=4)
-        num_classes = 4
+        if trian_mode_messidor_baseline:
+            num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss(weight=MESSIDOR_Brest_train.calculate_weights())
     else:
         raise NotImplementedError
@@ -246,5 +251,6 @@ if __name__=="__main__":
     parser.add_argument("--off_scheduler", action='store_true', help='turn off scheduler or not')
     # turn off the weighted loss or not
     parser.add_argument("--off_weighted_loss", action='store_true', help='turn off weighted loss or not')
+    parser.add_argument("--trian_mode_messidor_baseline", action='store_true', help='train_mode_messidor_baseline or not')
     args = parser.parse_args()
     main(**vars(args))
