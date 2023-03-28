@@ -40,7 +40,7 @@ class Baseline(nn.Module):
         # num_classes always keep 5, for the messido dataset, consider to change all 5 to 4, or just keep it.
         self.backbone = timm.create_model(backbone, pretrained=pretrained,num_classes=num_classes)
         if pretrained_path is not None:
-            self.backbone.load_state_dict(torch.load(pretrained_path))
+            self.backbone.load_state_dict(torch.load(pretrained_path),strict=False)
 
     def forward(self, x):
         x = self.backbone(x)

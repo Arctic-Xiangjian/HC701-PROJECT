@@ -46,7 +46,9 @@ from hc701fed.dataset.val_dataset_list import (
     MESSIDOR_Brest_Test,
 )
 
-
+from hc701fed.model.baseline import (
+    Baseline
+)
 
 # def load_pretrained_model(model, pretrained_model_path):
 #     pretrained_dict = torch.load(pretrained_model_path)
@@ -96,7 +98,7 @@ def main(backbone,
         MESSIDOR_Centerlized_Val = ConcatDataset([MESSIDOR_pairs_Val, MESSIDOR_Etienne_Val, MESSIDOR_Brest_Val])
         train_dataset = DataLoader(MESSIDOR_Centerlized_train, batch_size=batch_size, shuffle=True)
         val_dataset = DataLoader(MESSIDOR_Centerlized_Val, batch_size=batch_size, shuffle=False)
-        num_classes = 5
+        num_classes = 4
         LOSS = torch.nn.CrossEntropyLoss()
     elif dataset == "aptos":
         train_dataset = DataLoader(APTOS_train, batch_size=batch_size, shuffle=True,num_workers=4)
