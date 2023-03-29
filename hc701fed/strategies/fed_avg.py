@@ -1,6 +1,8 @@
 import time
 from typing import List
 
+import timm
+
 import torch
 from torch.utils.data import DataLoader, ConcatDataset
 
@@ -58,17 +60,16 @@ def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps)
     model_to_train.train()
     model_to_train.to(device)
     ls = 0
-    while ls < local_steps:
-        for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
-            data, target = data.to(device), target.to(device,torch.long)
-            optimizer.zero_grad()
-            output = model_to_train(data)
-            loss = LOSS(output, target)
-            loss.backward()
-            optimizer.step()
-            ls += 1
-            if ls >= local_steps:
-                break
+    for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
+        data, target = data.to(device), target.to(device,torch.long)
+        optimizer.zero_grad()
+        output = model_to_train(data)
+        loss = LOSS(output, target)
+        loss.backward()
+        optimizer.step()
+        ls += 1
+        if ls >= local_steps:
+            break
     return model_to_train
 
 def fed_avg(backbone,lr, batch_size, device, optimizer,
@@ -120,7 +121,13 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
         run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
 
     # Initialize the model
-    model = Baseline(backbone=backbone,num_classes=5)
+    if data_set_mode == "datasets":
+        num_of_classes = 5
+    elif data_set_mode == "hosptials":
+        num_of_classes = 4
+    else:
+        raise ValueError("data_set_mode should be either datasets or hosptials")
+    model = timm.create_model(backbone, pretrained=True, num_classes=num_of_classes)
     model_keys = model.state_dict().keys()
     # Initialize the optimizer
     optimizer = eval(optimizer)
