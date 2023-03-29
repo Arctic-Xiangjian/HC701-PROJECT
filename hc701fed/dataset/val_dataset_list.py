@@ -20,6 +20,7 @@ except:
 PATH_DATA = os.getcwd()
 
 train_transforms = transforms.Compose([
+    transforms.Lambda(lambda x: Image.fromarray(x)),
     transforms.RandomResizedCrop(224, scale=(0.67, 1.0), interpolation=interpolation),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),

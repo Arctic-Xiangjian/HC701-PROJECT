@@ -204,7 +204,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
                 print('best model saved')
             else:
                 non_improving_rounds += 1
-                if non_improving_rounds >= 500:
+                if non_improving_rounds >= 2000 //local_steps *50:
                     break
     if use_wandb:
         run.finish()

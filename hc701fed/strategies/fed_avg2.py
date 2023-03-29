@@ -1,5 +1,6 @@
 import time
 from typing import List
+
 import timm
 
 import torch
@@ -53,42 +54,32 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
-def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device,local_steps):
+def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps):
     model_to_train = copy.deepcopy(model)
-    global_model = copy.deepcopy(model)
-    optimizer = optimizer(model_to_train.parameters(), lr=lr)
+    optimizer = optimizer(model_to_train.parameters() , lr = lr)
     model_to_train.train()
     model_to_train.to(device)
     ls = 0
-    for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
-        data, target = data.to(device), target.to(device, torch.long)
-        optimizer.zero_grad()
-        output = model_to_train(data)
-        loss = LOSS(output, target)
-        # Add FedProx regularization term
-        local_weights = []
-        global_weights = []
-        for param, global_param in zip(model_to_train.parameters(), global_model.parameters()):
-            local_weights.append(param.detach().view(-1))
-            global_weights.append(global_param.detach().view(-1))
-        local_weights = torch.cat(local_weights).to(device)
-        global_weights = torch.cat(global_weights).to(device)
-        l2_reg = torch.linalg.vector_norm(local_weights - global_weights, ord=2)
-        loss += (mu / 2.0) * l2_reg
-        loss.backward()
-        optimizer.step()
-        ls += 1
-        if ls == local_steps:
-            break
+    while ls < local_steps:
+        for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
+            data, target = data.to(device), target.to(device,torch.long)
+            optimizer.zero_grad()
+            output = model_to_train(data)
+            loss = LOSS(output, target)
+            loss.backward()
+            optimizer.step()
+            ls += 1
+            if ls >= local_steps:
+                break
     return model_to_train
 
-def fed_prox(backbone,lr, batch_size, device, optimizer,
+def fed_avg(backbone,lr, batch_size, device, optimizer,
             seed, use_wandb, 
             wandb_project, wandb_entity,
             save_model, checkpoint_path,
             use_scheduler,
-            # FedProx parameters
-            num_local_epochs, num_comm_rounds,data_set_mode,mu,local_steps
+            # FedAvg parameters
+            num_comm_rounds,data_set_mode, local_steps,
 ):
     
     # set seed
@@ -128,7 +119,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
 
     # Initialize the wandb
     if use_wandb:
-        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_while'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
 
     # Initialize the model
     if data_set_mode == "datasets":
@@ -173,7 +164,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
         # Local training
         models_list_new = []
         for i, train_dataloader_iter in enumerate(train_dataloader_list):
-            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu,local_steps=local_steps)
+            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,local_steps=local_steps)
             # Try to print the learning rate to see whether the scheduler works
             # print(optimizer.param_groups[0]['lr'])
             models_list_new.append(copy.deepcopy(model_new))
@@ -203,13 +194,13 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
             if val_f1 > best_f1:
                 non_improving_rounds = 0
                 best_f1 = val_f1
-                save_path_meta = os.path.join(checkpoint_path, 'fed_prox_'+data_set_mode+'_'+str(seed))
+                save_path_meta = os.path.join(checkpoint_path, 'fed_avg_'+data_set_mode+'_'+str(seed))
                 if not os.path.exists(save_path_meta):
                     os.makedirs(save_path_meta)
                 save_model_path = os.path.join(save_path_meta, model_begin_time)
                 if not os.path.exists(save_model_path):
                     os.makedirs(save_model_path)
-                torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
+                # torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+str(comm_round)+'_model.pt'))
                 torch.save(val_model.state_dict(), os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt'))
                 print('best model saved')
             else:
@@ -220,18 +211,17 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
         run.finish()
     # Test
     # load the best model
-    if save_model:
-        val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
-        test_result = {}
-        Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
-        print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
-        test_result['Centrilized_test_acc'] = Centrilized_test_acc
-        test_result['Centrilized_test_f1'] = Centrilized_test_f1
-        for dataset_name, dataset_for_test in zip(dataset_list_str, test_dataloader_list):
-            test_acc,test_f1 = test(val_model,device,dataset_for_test)
-            test_result[dataset_name+'_test_acc'] = test_acc
-            test_result[dataset_name+'_test_f1'] = test_f1
-            print(dataset_name+'_test_acc: ', test_acc, dataset_name+'_test_f1: ', test_f1)
+    val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
+    test_result = {}
+    Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
+    print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
+    test_result['Centrilized_test_acc'] = Centrilized_test_acc
+    test_result['Centrilized_test_f1'] = Centrilized_test_f1
+    for dataset_name, dataset_for_test in zip(dataset_list_str, test_dataloader_list):
+        test_acc,test_f1 = test(val_model,device,dataset_for_test)
+        test_result[dataset_name+'_test_acc'] = test_acc
+        test_result[dataset_name+'_test_f1'] = test_f1
+        print(dataset_name+'_test_acc: ', test_acc, dataset_name+'_test_f1: ', test_f1)
     # try to sava some config for clarity
     if save_model:
         with open(os.path.join(save_model_path, 'config.json'), 'w') as f:
@@ -244,22 +234,23 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--backbone', type=str, default='resnet50')
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--optimizer', type=str, default='torch.optim.AdamW')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument("--use_wandb", action='store_true', help='use wandb or not')
-    parser.add_argument('--wandb_project', type=str, default='Fedprox_hc701')
+    parser.add_argument('--wandb_project', type=str, default='FedAvg_hc701')
     parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument('--checkpoint_path', type=str, default='none')
     parser.add_argument('--use_scheduler', action='store_true', help='use scheduler or not')
-    # Fedprox parameters
-    parser.add_argument('--num_local_epochs', type=int, default=1)
-    parser.add_argument('--num_comm_rounds', type=int, default=2)
+    # FedAvg parameters
+    parser.add_argument('--num_comm_rounds', type=int, default=50000)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
-    parser.add_argument('--mu', type=float, default=0.1)
-    parser.add_argument('--local_steps', type=int, default=1)
+    parser.add_argument('--local_steps', type=int, default=10)
     args = parser.parse_args()
-    fed_prox(**vars(args))
+    fed_avg(**vars(args))
+
+        
+        

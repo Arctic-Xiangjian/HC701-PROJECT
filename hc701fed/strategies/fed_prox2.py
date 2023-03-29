@@ -60,26 +60,27 @@ def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device,local_st
     model_to_train.train()
     model_to_train.to(device)
     ls = 0
-    for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
-        data, target = data.to(device), target.to(device, torch.long)
-        optimizer.zero_grad()
-        output = model_to_train(data)
-        loss = LOSS(output, target)
-        # Add FedProx regularization term
-        local_weights = []
-        global_weights = []
-        for param, global_param in zip(model_to_train.parameters(), global_model.parameters()):
-            local_weights.append(param.detach().view(-1))
-            global_weights.append(global_param.detach().view(-1))
-        local_weights = torch.cat(local_weights).to(device)
-        global_weights = torch.cat(global_weights).to(device)
-        l2_reg = torch.linalg.vector_norm(local_weights - global_weights, ord=2)
-        loss += (mu / 2.0) * l2_reg
-        loss.backward()
-        optimizer.step()
-        ls += 1
-        if ls == local_steps:
-            break
+    while ls < local_steps:
+        for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
+            data, target = data.to(device), target.to(device, torch.long)
+            optimizer.zero_grad()
+            output = model_to_train(data)
+            loss = LOSS(output, target)
+            # Add FedProx regularization term
+            local_weights = []
+            global_weights = []
+            for param, global_param in zip(model_to_train.parameters(), global_model.parameters()):
+                local_weights.append(param.detach().view(-1))
+                global_weights.append(global_param.detach().view(-1))
+            local_weights = torch.cat(local_weights).to(device)
+            global_weights = torch.cat(global_weights).to(device)
+            l2_reg = torch.linalg.vector_norm(local_weights - global_weights, ord=2)
+            loss += (mu / 2.0) * l2_reg
+            loss.backward()
+            optimizer.step()
+            ls += 1
+            if ls == local_steps:
+                break
     return model_to_train
 
 def fed_prox(backbone,lr, batch_size, device, optimizer,
@@ -128,7 +129,7 @@ def fed_prox(backbone,lr, batch_size, device, optimizer,
 
     # Initialize the wandb
     if use_wandb:
-        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_while'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
 
     # Initialize the model
     if data_set_mode == "datasets":
