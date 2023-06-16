@@ -1,6 +1,5 @@
 import time
 from typing import List
-
 import timm
 
 import torch
@@ -20,6 +19,8 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd(), 'HC701-PROJECT'))
 sys.path.append('../../')
+sys.path.append('../')
+sys.path.append('/home/xiangjianhou/hc701-fed/HC701PROJECT/hc701fed')
 
 from hc701fed.dataset.dataset_list_transform import (
     APTOS_train,
@@ -54,32 +55,52 @@ from hc701fed.model.baseline import (
 )
 from VAL import test
 
-def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps):
+def load_checkpoint(model, checkpoint_path, strict=False):
+    state_dict = torch.load(checkpoint_path)
+    new_state_dict = {}
+
+    for k, v in state_dict.items():
+        if "fc.weight" in k or "fc.bias" in k:
+            continue
+        new_state_dict[k] = v
+
+def local_step(model, train_dataloader, optimizer, LOSS, lr, mu, device,local_steps):
     model_to_train = copy.deepcopy(model)
-    optimizer = optimizer(model_to_train.parameters() , lr = lr)
+    global_model = copy.deepcopy(model)
+    optimizer = optimizer(model_to_train.parameters(), lr=lr)
     model_to_train.train()
     model_to_train.to(device)
     ls = 0
     while ls < local_steps:
         for batch_idx, (data, target) in tqdm(enumerate(train_dataloader)):
-            data, target = data.to(device), target.to(device,torch.long)
+            data, target = data.to(device), target.to(device, torch.long)
             optimizer.zero_grad()
             output = model_to_train(data)
             loss = LOSS(output, target)
+            # Add FedProx regularization term
+            local_weights = []
+            global_weights = []
+            for param, global_param in zip(model_to_train.parameters(), global_model.parameters()):
+                local_weights.append(param.detach().view(-1))
+                global_weights.append(global_param.detach().view(-1))
+            local_weights = torch.cat(local_weights).to(device)
+            global_weights = torch.cat(global_weights).to(device)
+            l2_reg = torch.linalg.vector_norm(local_weights - global_weights, ord=2)
+            loss += (mu / 2.0) * l2_reg
             loss.backward()
             optimizer.step()
             ls += 1
-            if ls >= local_steps:
+            if ls == local_steps:
                 break
     return model_to_train
 
-def fed_avg(backbone,lr, batch_size, device, optimizer,
+def fed_prox(backbone,lr, batch_size, device, optimizer,
             seed, use_wandb, 
             wandb_project, wandb_entity,
             save_model, checkpoint_path,
             use_scheduler,
-            # FedAvg parameters
-            num_comm_rounds,data_set_mode, local_steps,
+            # FedProx parameters
+            num_local_epochs, num_comm_rounds,data_set_mode,mu,local_steps
 ):
     
     # set seed
@@ -119,7 +140,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
 
     # Initialize the wandb
     if use_wandb:
-        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_while'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'normal'+backbone+'_while'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
 
     # Initialize the model
     if data_set_mode == "datasets":
@@ -129,6 +150,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
     else:
         raise ValueError("data_set_mode should be either datasets or hosptials")
     model = timm.create_model(backbone, pretrained=True, num_classes=num_of_classes)
+    # load_checkpoint(model, '/home/xiangjianhou/hc701-fed/checkpoint_spark/fine_tune_model_2023-04-04-06-24-08.pth')
     model_keys = model.state_dict().keys()
     # Initialize the optimizer
     optimizer = eval(optimizer)
@@ -164,7 +186,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
         # Local training
         models_list_new = []
         for i, train_dataloader_iter in enumerate(train_dataloader_list):
-            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,local_steps=local_steps)
+            model_new = local_step(model=model_global, train_dataloader=train_dataloader_iter, optimizer=optimizer, LOSS=LOSS,lr=lr_with_decay, device=device,mu=mu,local_steps=local_steps)
             # Try to print the learning rate to see whether the scheduler works
             # print(optimizer.param_groups[0]['lr'])
             models_list_new.append(copy.deepcopy(model_new))
@@ -194,7 +216,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
             if val_f1 > best_f1:
                 non_improving_rounds = 0
                 best_f1 = val_f1
-                save_path_meta = os.path.join(checkpoint_path, 'fed_avg_'+data_set_mode+'_'+str(seed))
+                save_path_meta = os.path.join(checkpoint_path, 'fed_prox_'+data_set_mode+'_'+str(seed))
                 if not os.path.exists(save_path_meta):
                     os.makedirs(save_path_meta)
                 save_model_path = os.path.join(save_path_meta, model_begin_time)
@@ -211,17 +233,18 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
         run.finish()
     # Test
     # load the best model
-    val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
-    test_result = {}
-    Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
-    print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
-    test_result['Centrilized_test_acc'] = Centrilized_test_acc
-    test_result['Centrilized_test_f1'] = Centrilized_test_f1
-    for dataset_name, dataset_for_test in zip(dataset_list_str, test_dataloader_list):
-        test_acc,test_f1 = test(val_model,device,dataset_for_test)
-        test_result[dataset_name+'_test_acc'] = test_acc
-        test_result[dataset_name+'_test_f1'] = test_f1
-        print(dataset_name+'_test_acc: ', test_acc, dataset_name+'_test_f1: ', test_f1)
+    if save_model:
+        val_model.load_state_dict(torch.load(os.path.join(save_model_path, 'fed_avg'+'_'+data_set_mode+'_'+backbone+'_'+'best_model.pt')))
+        test_result = {}
+        Centrilized_test_acc,Centrilized_test_f1 = test(val_model,device,Centrilized_test_dataloader)
+        print('Centrilized_test_acc: ', Centrilized_test_acc, 'Centrilized_test_f1: ', Centrilized_test_f1)
+        test_result['Centrilized_test_acc'] = Centrilized_test_acc
+        test_result['Centrilized_test_f1'] = Centrilized_test_f1
+        for dataset_name, dataset_for_test in zip(dataset_list_str, test_dataloader_list):
+            test_acc,test_f1 = test(val_model,device,dataset_for_test)
+            test_result[dataset_name+'_test_acc'] = test_acc
+            test_result[dataset_name+'_test_f1'] = test_f1
+            print(dataset_name+'_test_acc: ', test_acc, dataset_name+'_test_f1: ', test_f1)
     # try to sava some config for clarity
     if save_model:
         with open(os.path.join(save_model_path, 'config.json'), 'w') as f:
@@ -235,22 +258,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--backbone', type=str, default='resnet50')
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=21)
-    parser.add_argument('--device', type=str, default='cuda:0')
+    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--device', type=str, default='cuda:2')
     parser.add_argument('--optimizer', type=str, default='torch.optim.AdamW')
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument("--use_wandb", action='store_true', help='use wandb or not')
-    parser.add_argument('--wandb_project', type=str, default='FedAvg_hc701')
+    parser.add_argument('--wandb_project', type=str, default='Fedprox_hc701')
     parser.add_argument("--wandb_entity", type=str, default="arcticfox")
     parser.add_argument("--save_model", action='store_true', help='save model or not')
     parser.add_argument('--checkpoint_path', type=str, default='none')
     parser.add_argument('--use_scheduler', action='store_true', help='use scheduler or not')
-    # FedAvg parameters
-    parser.add_argument('--num_comm_rounds', type=int, default=50000)
+    # Fedprox parameters
+    parser.add_argument('--num_local_epochs', type=int, default=1)
+    parser.add_argument('--num_comm_rounds', type=int, default=500000)
     parser.add_argument('--data_set_mode', type=str, default='datasets',choices=['datasets','hosptials'])
+    parser.add_argument('--mu', type=float, default=0.1)
     parser.add_argument('--local_steps', type=int, default=50)
     args = parser.parse_args()
-    fed_avg(**vars(args))
-
-        
-        
+    fed_prox(**vars(args))

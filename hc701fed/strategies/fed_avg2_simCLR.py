@@ -20,6 +20,8 @@ import sys
 
 sys.path.append(os.path.join(os.getcwd(), 'HC701-PROJECT'))
 sys.path.append('../../')
+sys.path.append('../')
+sys.path.append('/home/xiangjianhou/hc701-fed/HC701PROJECT/hc701fed')
 
 from hc701fed.dataset.dataset_list_transform import (
     APTOS_train,
@@ -53,6 +55,17 @@ from hc701fed.model.baseline import (
     Baseline
 )
 from VAL import test
+
+def load_checkpoint(model, checkpoint_path, strict=False):
+    state_dict = torch.load(checkpoint_path)
+    new_state_dict = {}
+
+    for k, v in state_dict.items():
+        if "fc.weight" in k or "fc.bias" in k:
+            continue
+        new_state_dict[k] = v
+
+    model.load_state_dict(new_state_dict, strict=strict)
 
 def local_step(model, train_dataloader, optimizer, LOSS,lr, device, local_steps):
     model_to_train = copy.deepcopy(model)
@@ -119,7 +132,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
 
     # Initialize the wandb
     if use_wandb:
-        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_'+backbone+'_while'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
+        run = wandb.init(project=wandb_project, entity=wandb_entity, name=data_set_mode+'_Spark'+backbone+'_while'+datetime.now().strftime('%Y%m%d_%H%M%S'), job_type="training",reinit=True)
 
     # Initialize the model
     if data_set_mode == "datasets":
@@ -129,6 +142,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
     else:
         raise ValueError("data_set_mode should be either datasets or hosptials")
     model = timm.create_model(backbone, pretrained=True, num_classes=num_of_classes)
+    load_checkpoint(model, '/home/xiangjianhou/hc701-fed/checkpoint_spark/fine_tune_model_2023-04-04-06-24-08.pth')
     model_keys = model.state_dict().keys()
     # Initialize the optimizer
     optimizer = eval(optimizer)
@@ -159,7 +173,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
     if use_scheduler:
         model_for_scheduler = copy.deepcopy(model)
         optimizer_scheduler = copy.deepcopy(optimizer(model_for_scheduler.parameters(), lr=lr))
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_scheduler, T_max=10,eta_min=0.00001)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_scheduler, T_max=10,eta_min=0.0001)
     for comm_round in range(num_comm_rounds):
         # Local training
         models_list_new = []
@@ -177,6 +191,7 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
                 key_avg += model.state_dict()[key]*len(train_dataloader_iter)/total_train_iters
             global_state_dict[key] = key_avg
         model_global.load_state_dict(global_state_dict)
+        # check whether the model is updated
         # make lr_with_decay decay
         if use_scheduler:
             scheduler.step()
@@ -186,9 +201,10 @@ def fed_avg(backbone,lr, batch_size, device, optimizer,
         # Validation
         val_model = model_global
         val_acc,val_f1 = test(val_model,device,Centrilized_val_dataloader)
+        train_acc,train_f1 = test(val_model,device,train_dataloader_list[0])
 
         if use_wandb:
-            wandb.log({"val_acc": val_acc, "val_f1": val_f1})
+            wandb.log({"val_acc": val_acc, "val_f1": val_f1, "train_acc": train_acc, "train_f1": train_f1})
         
         if save_model:
             if val_f1 > best_f1:
@@ -235,7 +251,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--backbone', type=str, default='resnet50')
     parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--batch_size', type=int, default=21)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--optimizer', type=str, default='torch.optim.AdamW')
     parser.add_argument('--seed', type=int, default=42)

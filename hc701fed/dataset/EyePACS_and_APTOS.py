@@ -72,17 +72,3 @@ class Eye_APTOS(Dataset):
             return self.transform(self.data[idx]), self.labels[idx]
         else:
             return self.transform(self.data[idx]), self.labels[idx]
-        
-    def calculate_weights(self):
-        if self.mode == 'train':
-            labels = self.labels
-        elif self.mode == 'val':
-            labels = self.labels
-        else:
-            raise ValueError('mode should be train or val')
-        class_weights = compute_class_weight(
-            class_weight='balanced',
-            classes=list(set(labels)),
-            y=labels,
-        )
-        return torch.FloatTensor(class_weights)
